@@ -23,7 +23,7 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
     const handleBlur = () => setIsFocused(false);
     const shouldFloatLabel = isFocused || value.length > 0;
     return (
-      <div className="relative bg-black/15">
+      <div className="relative ">
         <input
           ref={ref}
           type={type}
@@ -34,17 +34,19 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder=" "
-          className={`peer w-full border-2 rounded-2xl mx-3 my-3 ${className}`}
+          className={`font-inter peer rounded-2xl px-2 pt-3 pb-1.5 text-sm placeholder-transparent
+            transition-all duration-200
+            bg-primaryColor border-2 border-black/70 shadow-2xl shadow-secondaryColor/30
+            focus:outline-none
+            ${className}`}
           {...rest}
         />
 
         <label
           htmlFor={inputId}
-          className={`absolute left-4 text-red-400 ${
-            shouldFloatLabel
-              ? "top-2 text-[11px] font-semibold text-font"
-              : "top-1 text-sm"
-          }`}
+          className={`absolute left-4 text-black flex items-center justify-center
+            transition-all duration-200
+            ${shouldFloatLabel ? "top-1 text-xs" : "top-3 text-sm"}`}
         >
           {label}
         </label>
