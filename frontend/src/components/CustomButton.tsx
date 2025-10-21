@@ -18,7 +18,10 @@ export const CustomButton = forwardRef<HTMLButtonElement, CustomButtonProps>(
           value={value}
           type={type}
           id={id}
-          className={`bg-secondaryColor rounded-lg ${className}`}
+          className={`bg-secondaryColor rounded-lg
+            shadow-2xl shadow-secondaryColor/30
+            focus:outline-none 
+            ${className}`}
           {...rest}
         >
           {label}

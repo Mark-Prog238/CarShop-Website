@@ -5,7 +5,9 @@
   --color-bgColor: oklch(0.1 0.1 221.19);
   --color-primaryColor: oklch(0.2 0.2 221);
   --color-secondaryColor: oklch(0.5 0.5 221);
+  --color-thirdColor: oklch(0.1 0.3 195);
   --color-fonts: oklch(0.76, 0.43, 223.12);
+  --color-headingFonts: oklch(0.5, 0.6, 100.12);
   --font-inter: "Inter";
 }
 

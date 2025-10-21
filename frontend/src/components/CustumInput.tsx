@@ -44,7 +44,7 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
 
         <label
           htmlFor={inputId}
-          className={`absolute left-4 text-black flex items-center justify-center
+          className={`absolute left-4 text-gray-400/90 flex items-center justify-center
             transition-all duration-200
             ${shouldFloatLabel ? "top-1 text-xs" : "top-3 text-sm"}`}
         >
