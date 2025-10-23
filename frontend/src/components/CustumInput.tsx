@@ -1,5 +1,4 @@
 import { forwardRef, useState } from "react";
-
 interface CustomInputProps {
   label: string;
   type?: "text" | "email" | "password" | "tel" | "url";
@@ -9,11 +8,25 @@ interface CustomInputProps {
   id?: string;
   className?: string;
   required?: boolean;
+  icon?: string;
+  iconStyle?: string;
+  iconEvent?: () => void;
 }
-
 export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
   (
-    { label, type, value, onChange, name, id, className = "", ...rest },
+    {
+      label,
+      type,
+      value,
+      onChange,
+      name,
+      id,
+      className = "",
+      icon,
+      iconStyle,
+      iconEvent,
+      ...rest
+    },
     ref
   ) => {
     const [isFocused, setIsFocused] = useState(false);
@@ -41,7 +54,6 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
             ${className}`}
           {...rest}
         />
-
         <label
           htmlFor={inputId}
           className={`absolute left-4 text-gray-400/90 flex items-center justify-center
@@ -50,6 +62,13 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
         >
           {label}
         </label>
+        {icon && (
+          <img
+            src={icon}
+            className={`absolute flex items-center justify-center right-2 top-3 ${iconStyle} size-5`}
+            onClick={iconEvent}
+          />
+        )}
       </div>
     );
   }

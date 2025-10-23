@@ -2,7 +2,7 @@ import { forwardRef, useState } from "react";
 
 interface CustomButtonProps {
   label?: string;
-  type?: "submit" | "reset";
+  type?: "submit" | "reset" | "button";
   value?: string;
   onClick?: (value: string) => void;
   id?: string;
