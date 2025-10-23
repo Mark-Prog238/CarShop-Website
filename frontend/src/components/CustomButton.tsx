@@ -1,4 +1,4 @@
-import { forwardRef, useState } from "react";
+import { forwardRef } from "react";
 
 interface CustomButtonProps {
   label?: string;
@@ -15,6 +15,7 @@ export const CustomButton = forwardRef<HTMLButtonElement, CustomButtonProps>(
     return (
       <div>
         <button
+          ref={ref}
           value={value}
           type={type}
           id={id}
