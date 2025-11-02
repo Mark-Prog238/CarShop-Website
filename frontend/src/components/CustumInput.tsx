@@ -1,7 +1,7 @@
 import { forwardRef, useState } from "react";
 interface CustomInputProps {
   label: string;
-  type?: "text" | "email" | "password" | "tel" | "url";
+  type?: "text" | "email" | "password" | "tel" | "url" | "number";
   value: string;
   onChange: (value: string) => void;
   name?: string;
@@ -47,7 +47,7 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder=" "
-          className={`font-inter peer rounded-2xl px-2 pt-3 pb-1.5 text-sm placeholder-transparent
+          className={`peer rounded-2xl px-2 pt-3 pb-1.5 text-sm placeholder-transparent
             transition-all duration-200
             bg-primaryColor border-2 border-black/70 shadow-2xl shadow-secondaryColor/30
             focus:outline-none
@@ -65,8 +65,8 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
         {icon && (
           <img
             src={icon}
-            className={`absolute flex items-center justify-center right-2 top-3 ${iconStyle} size-5`}
             onClick={iconEvent}
+            className={`absolute flex items-center justify-center right-2 top-3 ${iconStyle} size-5 cursor-pointer`}
           />
         )}
       </div>

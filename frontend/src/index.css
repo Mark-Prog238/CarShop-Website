@@ -6,6 +6,7 @@
   --color-primaryColor: oklch(0.2 0.2 221);
   --color-secondaryColor: oklch(0.5 0.5 221);
   --color-thirdColor: oklch(0.1 0.3 195);
+  --color-thirdColorBright: oklch(0.1 0.5 195);
   --color-fonts: oklch(0.76, 0.43, 223.12);
   --color-headingFonts: oklch(0.5, 0.6, 100.12);
   --font-inter: "Inter";
@@ -13,4 +14,38 @@
 
 body {
   font-family: Inter;
+}
+
+.nav-row {
+  @apply flex justify-center items-center flex-col gap-2;
+}
+.nav-row-second {
+  @apply border border-black
+        shadow-xl shadow-secondaryColor/15
+      bg-thirdColor rounded-xl p-3 flex justify-center items-center flex-col px-10
+      hover:translate-y-[-8px] hover:scale-110 transition-all duration-200 hover:bg-thirdColorBright
+      hover:shadow-secondaryColor/30;
+}
+
+.login-form-style {
+  @apply flex-col flex items-center justify-center rounded-2xl
+      border border-black
+        shadow-2xl shadow-secondaryColor/30
+      bg-thirdColor;
+}
+
+.input-theme-one {
+  @apply rounded-lg px-4 py-3 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-thirdColor;
+}
+
+.btn {
+  @apply rounded-xl px-4 py-3 focus:ring-2 focus:ring-thirdColor text-sm placeholder-transparent
+            transition-all duration-200
+            bg-primaryColor border-2 border-black/70 shadow-2xl shadow-secondaryColor/30 focus:outline-none;
+}
+
+.btn-secondary {
+  @apply justify-center px-4 py-3 items-center flex rounded-lg  focus:outline-none focus:ring-2 focus:ring-thirdColor text-sm
+            transition-all duration-200
+           border-2 border-primaryColor shadow-2xl shadow-secondaryColor/30;
 }

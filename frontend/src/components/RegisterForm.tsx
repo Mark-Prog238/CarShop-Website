@@ -2,9 +2,10 @@ import { CustomInput } from "../components/CustumInput";
 import { CustomButton } from "../components/CustomButton";
 import { Translations } from "../components/Data";
 import React, { useState } from "react";
-import Lock from "../assets/icons/lock.svg";
+import EyeHidden from "../assets/icons/eye-slash-solid-full.svg";
+import EyeShow from "../assets/icons/eye-solid-full.svg";
 import API from "./api.ts";
-
+import { Link } from "react-router";
 export const RegisterForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,14 +45,9 @@ export const RegisterForm = () => {
   };
 
   return (
-    <div
-      className="flex-col flex items-center justify-center w-100 h-120 rounded-2xl
-      border border-black
-        shadow-2xl shadow-secondaryColor/30
-      bg-thirdColor"
-    >
+    <div className="login-form-style w-100 h-120">
       <h1 className="font-bold text-white pb-15 text-[4vh]">
-        {Translations.register}
+        {Translations.EN.register}
       </h1>
       <form className="flex flex-col gap-3" onSubmit={handleLogin}>
         <CustomInput
@@ -78,16 +74,16 @@ export const RegisterForm = () => {
           value={password}
           onChange={setPassword}
           className="text-white/80 pl-3"
-          icon={showPassword ? Lock : Lock}
+          icon={showPassword ? EyeShow : EyeHidden}
           iconEvent={() => setShowPassword(!showPassword)}
         />
         <CustomInput
           type={showConfirmPassword ? "text" : "password"}
-          label="Confirm your password: "
+          label="Confirm password: "
           value={confirmPassword}
           onChange={setConfirmPassword}
           className="text-white/80 pl-3"
-          icon={showConfirmPassword ? Lock : Lock}
+          icon={showConfirmPassword ? EyeShow : EyeHidden}
           iconEvent={() => setShowConfirmPassword(!showConfirmPassword)}
         />
 
@@ -98,9 +94,9 @@ export const RegisterForm = () => {
         />
         <div className="w-full h-px bg-linear-to-r from-transparent via-white/10 to-transparent my-4"></div>
       </form>
-      <a href="" className="text-gray-500/70 text-sm font-inter">
+      <Link to="/login" className="text-gray-500/70 text-sm font-inter">
         Have an account? Login Here
-      </a>
+      </Link>
     </div>
   );
 };
