@@ -3,7 +3,6 @@ import { CustomInput } from "../components/CustumInput";
 import { useState } from "react";
 import { BRAND_MODELS } from "../components/Data";
 import { Footer } from "../components/Footer";
-import { PriceRangeMenu } from "../components/PriceRange";
 export const HomePage = () => {
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
