@@ -2,7 +2,7 @@ import { NavbarSecond } from "../components/NavbarSecond";
 import { CustomInput } from "../components/CustumInput";
 import { useState } from "react";
 import { BRAND_MODELS } from "../components/Data";
-import { CustomButton } from "../components/CustomButton";
+import { Footer } from "../components/Footer";
 import { PriceRangeMenu } from "../components/PriceRange";
 export const HomePage = () => {
   const [brand, setBrand] = useState("");
@@ -52,7 +52,7 @@ export const HomePage = () => {
             >
               <option value="">Any make</option>
               {Object.keys(BRAND_MODELS).map((b) => (
-                <option key={b} value={b}>
+                <option className="dropdown-menu" key={b} value={b}>
                   {b}
                 </option>
               ))}
@@ -62,10 +62,11 @@ export const HomePage = () => {
               value={model}
               onChange={(e) => setModel(e.target.value)}
               disabled={!brand}
+              className="text-white"
             >
               <option value="">Any model</option>
               {models.map((m) => (
-                <option key={m} value={m}>
+                <option className="dropdown-menu" key={m} value={m}>
                   {m}
                 </option>
               ))}
@@ -172,6 +173,8 @@ export const HomePage = () => {
           </div>
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 };

@@ -1,4 +1,3 @@
-import { Logo } from "./Data";
 export const NavbarSecond = () => {
   return (
     <div className="">

@@ -49,3 +49,7 @@ body {
             transition-all duration-200
            border-2 border-primaryColor shadow-2xl shadow-secondaryColor/30;
 }
+
+.dropdown-menu {
+  @apply bg-black text-white;
+}
