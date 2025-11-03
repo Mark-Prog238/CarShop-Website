@@ -49,7 +49,7 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
           placeholder=" "
           className={`peer rounded-2xl px-2 pt-3 pb-1.5 text-sm placeholder-transparent
             transition-all duration-200
-            bg-primaryColor border-2 border-black/70 shadow-2xl shadow-secondaryColor/30
+            bg-buttonBg border-2 border-black/70 shadow-2xl shadow-secondaryColor/30
             focus:outline-none
             ${className}`}
           {...rest}

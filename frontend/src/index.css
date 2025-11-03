@@ -2,15 +2,61 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bgColor: oklch(0.1 0.1 221.19);
+  --color-buttonBg: oklch(0.1 0.1 221.19); /* bg for btns */
+  --color-backgroundSecond: oklch(0.97 0.02 250); /* bg for pop outs */
+  --color-surfaceColor: oklch(0.93 0.03 250); /* main page bg */
+
   --color-primaryColor: oklch(0.2 0.2 221);
   --color-secondaryColor: oklch(0.5 0.5 221);
   --color-thirdColor: oklch(0.1 0.3 195);
   --color-thirdColorBright: oklch(0.1 0.5 195);
-  --color-fonts: oklch(0.76, 0.43, 223.12);
+  /* FONTS */
+  --color-fonts: oklch(0.25 0.03 250); /* dark gray-blue text */
+  --color-headingFonts: oklch(0.2 0.05 250); /* stronger heading contrast */
+  /* TEST */
+  /* Brand / Primary */
+  --color-primaryColor: oklch(0.58 0.16 260); /* button blue */
+  --color-primaryColor-light: oklch(0.75 0.1 260); /*lighter hover blue btn */
+  --color-primaryColor-dark: oklch(0.45 0.18 260); /* darker focus blue btn */
+
+  /* Secondary / Accent */
+  --color-secondaryColor: oklch(0.72 0.14 190); /* teal accent */
+  --color-secondaryColor-bright: oklch(0.85 0.12 190); /* soft aqua highlight */
+
+  /* Tertiary / Supporting */
+  --color-thirdColor: oklch(0.55 0.09 340); /* light pink */
+  --color-thirdColorBright: oklch(0.65 0.15 340);
+
+  /* TEST */
   --color-headingFonts: oklch(0.5, 0.6, 100.12);
   --font-inter: "Inter";
 }
+/* 
+@theme {
+  /* Backgrounds */
+--color-bgColor: oklch(0.97 0.02 250); /* soft neutral background */
+--color-surfaceColor: oklch(0.93 0.03 250); /* cards, panels */
+
+/* Brand / Primary */
+--color-primaryColor: oklch(0.58 0.16 260); /* medium blue */
+--color-primaryColor-light: oklch(0.75 0.1 260); /* lighter hover state */
+--color-primaryColor-dark: oklch(0.45 0.18 260); /* darker focus state */
+
+/* Secondary / Accent */
+--color-secondaryColor: oklch(0.72 0.14 190); /* teal accent */
+--color-secondaryColor-bright: oklch(0.85 0.12 190); /* soft aqua highlight */
+
+/* Tertiary / Supporting */
+--color-thirdColor: oklch(0.55 0.09 340); /* subtle magenta tint */
+--color-thirdColorBright: oklch(0.65 0.15 340);
+
+/* Text */
+--color-fonts: oklch(0.25 0.03 250); /* dark gray-blue text */
+--color-headingFonts: oklch(0.2 0.05 250); /* stronger heading contrast */
+
+/* Font * 
+  --font-inter: "Inter";
+} */
 
 body {
   font-family: Inter;
@@ -22,8 +68,8 @@ body {
 .nav-row-second {
   @apply border border-black
         shadow-xl shadow-secondaryColor/15
-      bg-thirdColor rounded-xl p-3 flex justify-center items-center flex-col px-10
-      hover:translate-y-[-8px] hover:scale-110 transition-all duration-200 hover:bg-thirdColorBright
+      bg-secondaryColor rounded-xl p-3 flex justify-center items-center flex-col px-10
+      hover:translate-y-[-8px] hover:scale-110 transition-all duration-200 hover:bg-secondaryColor-bright
       hover:shadow-secondaryColor/30;
 }
 
@@ -35,11 +81,14 @@ body {
 }
 
 .input-theme-one {
-  @apply rounded-lg px-4 py-3 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-thirdColor;
+  @apply rounded-lg px-4 py-3 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-thirdColor
+  text-white;
 }
 
 .btn {
-  @apply rounded-xl px-4 py-3 focus:ring-2 focus:ring-thirdColor text-sm placeholder-transparent
+  @apply rounded-xl px-4 py-3 focus:ring-2 focus:ring-thirdColor 
+   text-sm text-white 
+   placeholder-transparent
             transition-all duration-200
             bg-primaryColor border-2 border-black/70 shadow-2xl shadow-secondaryColor/30 focus:outline-none;
 }
@@ -51,5 +100,13 @@ body {
 }
 
 .dropdown-menu {
-  @apply bg-black text-white;
+  @apply bg-primaryColor-light text-white;
+}
+
+.container {
+  @apply flex flex-col;
+}
+
+.select {
+  @apply bg-primaryColor/50 rounded-lg w-full h-full text-white;
 }

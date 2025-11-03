@@ -1,4 +1,8 @@
+import { Navigate } from "react-router";
 export const NavbarSecond = () => {
+  const profil = () => {
+    <Navigate to={"/login"} />;
+  };
   return (
     <div className="">
       <nav className="flex items-center justify-center space-x-10 font-bold text-xl text-white/80 py-4 pt-4 px-4">
@@ -6,7 +10,9 @@ export const NavbarSecond = () => {
         <ul className="nav-row-second">MESSAGES</ul>
         <ul className="nav-row-second">NOTIFICATIONS</ul>
         <ul className="nav-row-second">GARAGE</ul>
-        <ul className="nav-row-second">PROFILE</ul>
+        <ul className="nav-row-second" onClick={profil}>
+          <a href="/login">aaaaa</a>
+        </ul>
       </nav>
     </div>
   );

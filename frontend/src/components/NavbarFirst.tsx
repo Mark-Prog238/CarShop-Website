@@ -1,5 +1,9 @@
+import { Navigate } from "react-router";
 import { Logo } from "./Data";
 export const NavbarFirst = () => {
+  const Profil = () => {
+    <Navigate to={"/login"} />;
+  };
   return (
     <div className="">
       <nav className="flex items-center justify-center gap-6 font-bold text-[9px] text-white/50 py-4 px-4 bg-white/20">
@@ -47,7 +51,7 @@ export const NavbarFirst = () => {
           </svg>
           GARAGE
         </ul>
-        <ul className="nav-row">
+        <ul className="nav-row" onClick={Profil}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="fill-white size-8"
@@ -55,7 +59,7 @@ export const NavbarFirst = () => {
           >
             <path d="M320 312C386.3 312 440 258.3 440 192C440 125.7 386.3 72 320 72C253.7 72 200 125.7 200 192C200 258.3 253.7 312 320 312zM290.3 368C191.8 368 112 447.8 112 546.3C112 562.7 125.3 576 141.7 576L498.3 576C514.7 576 528 562.7 528 546.3C528 447.8 448.2 368 349.7 368L290.3 368z" />
           </svg>
-          PROFILE
+          <a href="/login">aaa</a>
         </ul>
         <ul className="flex"></ul>
         <ul className="flex"></ul>
