@@ -723,40 +723,6 @@ export const BRAND_MODELS: Record<string, string[]> = {
     "Ducato 2.2 Multijet",
   ],
 
-  /* ------- Volvo ------- */
-  Volvo: [
-    // XC40
-    "XC40 B3",
-    "XC40 B4",
-    "XC40 T4",
-    "XC40 T5",
-    "XC40 Recharge",
-    // XC60
-    "XC60 B4",
-    "XC60 B5",
-    "XC60 T6",
-    "XC60 T8 Recharge",
-    "XC60 Polestar",
-    // XC90
-    "XC90 B5",
-    "XC90 T6",
-    "XC90 T8 Recharge",
-    "XC90 Polestar",
-    // S60
-    "S60 B4",
-    "S60 T6",
-    "S60 T8 Recharge",
-    "S60 Polestar",
-    // V60
-    "V60 B4",
-    "V60 T6",
-    "V60 T8 Recharge",
-    "V60 Polestar",
-    "V60 Cross Country",
-    // C40
-    "C40 Recharge",
-  ],
-
   /* ------- Škoda ------- */
   Škoda: [
     // Fabia
