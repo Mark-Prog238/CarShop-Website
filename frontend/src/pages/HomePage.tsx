@@ -13,9 +13,6 @@ export const HomePage = () => {
   const [priceMenuOpen, setPriceMenuOpen] = useState(false);
   const models = brand ? BRAND_MODELS[brand] || [] : [];
 
-  const showPriceInput = () => {
-    <PriceRangeMenu />;
-  };
   return (
     <div className="min-h-screen bg-bgColor text-white">
       <NavbarSecond />
