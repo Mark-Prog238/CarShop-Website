@@ -1,4 +1,3 @@
-import { Navigate } from "react-router";
 export const NavbarSecond = () => {
   return (
     <div className="">

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { CustomInput } from "../components/CustomInput";
 
 import { BRAND_MODELS } from "../components/Data";
 export const SellPage = () => {
