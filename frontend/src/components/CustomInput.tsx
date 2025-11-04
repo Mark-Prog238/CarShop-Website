@@ -47,26 +47,32 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder=" "
-          className={`peer rounded-2xl px-2 pt-3 pb-1.5 text-sm placeholder-transparent
+          className={`peer rounded-lg px-8 pt-3.5 pb-1.5 text-sm placeholder-transparent
             transition-all duration-200
-            bg-buttonBg border-2 border-black/70 shadow-2xl shadow-secondaryColor/30
+            bg-primaryColor-light  hover:bg-primaryColor-dark
+            
+            border-2 border-black/70 shadow-2xl shadow-secondaryColor/30
             focus:outline-none
             ${className}`}
           {...rest}
         />
         <label
           htmlFor={inputId}
-          className={`absolute left-4 text-gray-400/90 flex items-center justify-center
+          className={`
+            absolute left-4 flex items-center justify-center
             transition-all duration-200
+          text-fonts font-semibold
             ${shouldFloatLabel ? "top-1 text-xs" : "top-3 text-sm"}`}
         >
-          {label}
+          <p className="font-bold">{label}</p>
         </label>
         {icon && (
           <img
             src={icon}
             onClick={iconEvent}
-            className={`absolute flex items-center justify-center right-2 top-3 ${iconStyle} size-5 cursor-pointer`}
+            className={`absolute flex items-center justify-center
+               right-2 top-3 ${iconStyle} size-5 cursor-pointer
+               `}
           />
         )}
       </div>

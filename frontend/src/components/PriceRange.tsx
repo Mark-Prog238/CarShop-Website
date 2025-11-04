@@ -1,4 +1,4 @@
-import { CustomInput } from "../components/CustumInput";
+import { CustomInput } from "./CustomInput";
 import { useState } from "react";
 export const PriceRangeMenu = () => {
   const [minPrice, setMinPrice] = useState("");

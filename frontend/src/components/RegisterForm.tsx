@@ -1,4 +1,4 @@
-import { CustomInput } from "../components/CustumInput";
+import { CustomInput } from "./CustomInput.tsx";
 import { CustomButton } from "../components/CustomButton";
 import { Translations } from "../components/Data";
 import React, { useState } from "react";

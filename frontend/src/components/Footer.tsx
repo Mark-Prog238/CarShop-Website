@@ -1,6 +1,6 @@
 export const Footer = () => {
   return (
-    <footer className="w-full bg-bgColor text-black">
+    <footer className="w-full bg-surfaceColor text-black">
       {/* Divider line */}
       <div className="my-2 w-full h-[2px] bg-linear-to-r from-primaryColor/10 via-primaryColor to-primaryColor/10" />
 
