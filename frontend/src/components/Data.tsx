@@ -27,6 +27,16 @@ export const Logo = () => {
   );
 };
 
+export const fuelType = [
+  "diesel",
+  "bencin",
+  "Hibridni Pogon(vsi)",
+  "   HEV - hibrid",
+  "   PHEV - plugin hibrid",
+  "e-pogon",
+  "plin",
+];
+
 // brand-engineModels.ts
 export const BRAND_MODELS: Record<string, string[]> = {
   /* ------- BMW ------- */
