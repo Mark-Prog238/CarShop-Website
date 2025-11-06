@@ -1,4 +1,4 @@
-import express from "express";
+import express, { response } from "express";
 import cors from "cors";
 import { connectDB } from "./db/connect.js";
 import bcrypt from "bcrypt";
@@ -63,6 +63,21 @@ app.post("/api/register", async (req, res) => {
     console.error("❌ Error creatring user: ", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
+});
+
+// za aute
+
+app.get("/api/cars/makes", async (req, res) => {
+  const resp = await fetch("https://carapi.app/api/makes/v2");
+  const data = await resp.json();
+  res.json(data);
+});
+
+app.get("/api/cars/models/:make", async (req, res) => {
+  const { make } = req.params;
+  const resp = await fetch(`https://carapi.app/api/models/v2?make=${make}`);
+  const data = await resp.json();
+  res.json(data);
 });
 
 app.listen(8000, () => console.log("server running on https://localhost:8000"));
