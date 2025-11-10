@@ -1,62 +1,28 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 @import "tailwindcss";
-/* 
-@theme {
-  /* Backgrounds */
---color-bgColor: oklch(0.97 0.02 250); /* soft neutral background */
---color-surfaceColor: oklch(0.93 0.03 250); /* cards, panels */
-
-/* Brand / Primary */
---color-primaryColor: oklch(0.58 0.16 260); /* medium blue */
---color-primaryColor-light: oklch(0.75 0.1 260); /* lighter hover state */
---color-primaryColor-dark: oklch(0.45 0.18 260); /* darker focus state */
-
-/* Secondary / Accent */
---color-secondaryColor: oklch(0.72 0.14 190); /* teal accent */
---color-secondaryColor-bright: oklch(0.85 0.12 190); /* soft aqua highlight */
-
-/* Tertiary / Supporting */
---color-thirdColor: oklch(0.55 0.09 340); /* subtle magenta tint */
---color-thirdColorBright: oklch(0.65 0.15 340);
-
-/* Text */
---color-fonts: oklch(0.25 0.03 250); /* dark gray-blue text */
---color-headingFonts: oklch(0.2 0.05 250); /* stronger heading contrast */
-
-/* Font * 
-  --font-inter: "Inter";
-} */
 
 @theme {
-  --color-buttonBg: oklch(0.1 0.1 221.19); /* bg for btns     DARK     */
-  --color-bgSecond: oklch(0.97 0.02 250); /* bg for pop outs /     WHITE     */
-  --color-surfaceColor: oklch(
-    0.93 0.03 250
-  ); /* main page bg /   LIGHT BLUE     */
+  /* Updated palette: Indigo + Amber with soft slate backgrounds */
+  --color-buttonBg: oklch(0.22 0.03 250); /* card/panel background (slate) */
+  --color-bgSecond: oklch(0.98 0.02 100); /* surfaces/popouts (near white) */
+  --color-surfaceColor: oklch(0.95 0.02 250); /* app background */
 
-  --color-primaryColor: oklch(0.2 0.2 221) /* BLUE */;
-  --color-secondaryColor: oklch(0.5 0.5 221) /* TURKIZ */;
-  --color-thirdColor: oklch(0.1 0.3 195) /* PINK */;
-  --color-thirdColorBright: oklch(0.1 0.5 195) /* PINK BRIGHT */;
-  /* FONTS */
-  --color-fonts: oklch(0.25 0.03 250); /* dark gray-blue text */
-  --color-headingFonts: oklch(0.2 0.05 250); /* stronger heading contrast */
-  /* TEST */
-  /* Brand / Primary */
-  --color-primaryColor: oklch(0.58 0.16 260); /* button blue */
-  --color-primaryColor-light: oklch(0.75 0.1 260); /*lighter hover blue btn */
-  --color-primaryColor-dark: oklch(0.45 0.18 260); /* darker focus blue btn */
+  /* Primary (Indigo) */
+  --color-primaryColor: oklch(0.6 0.2 278); /* base */
+  --color-primaryColor-light: oklch(0.76 0.18 278); /* hover */
+  --color-primaryColor-dark: oklch(0.48 0.21 278); /* active/focus */
 
-  /* Secondary / Accent */
-  --color-secondaryColor: oklch(0.72 0.14 190); /* teal accent */
-  --color-secondaryColor-bright: oklch(0.85 0.12 190); /* soft aqua highlight */
+  /* Secondary (Amber) */
+  --color-secondaryColor: oklch(0.78 0.18 70); /* accent */
+  --color-secondaryColor-bright: oklch(0.86 0.16 70); /* highlight */
 
-  /* Tertiary / Supporting */
-  --color-thirdColor: oklch(0.55 0.09 340); /* light pink */
-  --color-thirdColorBright: oklch(0.65 0.15 340);
+  /* Tertiary (Rose) */
+  --color-thirdColor: oklch(0.65 0.15 20);
+  --color-thirdColorBright: oklch(0.74 0.18 20);
 
-  /* TEST */
-  --color-headingFonts: oklch(0.5, 0.6, 100.12);
+  /* Typography */
+  --color-fonts: oklch(0.24 0.02 260);
+  --color-headingFonts: oklch(0.2 0.03 260);
   --font-inter: "Inter";
 }
 
@@ -90,17 +56,17 @@ body {
 }
 
 .btn {
-  @apply rounded-xl px-4 py-3 focus:ring-2 focus:ring-thirdColor 
+  @apply rounded-xl px-4 py-3 focus:ring-2 focus:ring-primaryColor-dark 
    text-sm text-white 
    placeholder-transparent
             transition-all duration-200
-            bg-primaryColor border-2 border-black/70 shadow-2xl shadow-secondaryColor/30 focus:outline-none;
+            bg-primaryColor border-2 border-black/10 shadow-xl shadow-secondaryColor/30 focus:outline-none hover:bg-primaryColor-light active:bg-primaryColor-dark hover:translate-y-[-1px];
 }
 
 .btn-secondary {
-  @apply justify-center px-4 py-3 items-center flex rounded-lg  focus:outline-none focus:ring-2 focus:ring-thirdColor text-sm
+  @apply justify-center px-4 py-3 items-center flex rounded-lg  focus:outline-none focus:ring-2 focus:ring-primaryColor-dark text-sm
             transition-all duration-200
-           border-2 border-primaryColor shadow-2xl shadow-secondaryColor/30;
+           border-2 border-primaryColor text-primaryColor bg-transparent hover:bg-primaryColor/10 shadow-md shadow-secondaryColor/20;
 }
 
 .dropdown-menu {
@@ -112,13 +78,21 @@ body {
 }
 
 .select {
-  @apply bg-primaryColor/50 rounded-lg w-full h-full text-white;
+  @apply bg-primaryColor/40 rounded-lg w-full h-full text-white outline-none focus:ring-2 focus:ring-primaryColor-dark hover:bg-primaryColor/50 transition-colors duration-200;
 }
 
 .tableHeadBox {
-  @apply px-4 py-2 border border-gray-700 text-left;
+  @apply px-4 py-2 border border-gray-700 text-left bg-primaryColor-dark/20 text-white;
 }
 
 .tableRowBox {
-  @apply px-4 py-2 border border-gray-700;
+  @apply px-4 py-2 border border-gray-700 hover:bg-primaryColor/10 transition-colors duration-150;
+}
+
+/* uploader */
+.uploader-drop {
+  @apply border-2 border-dashed border-primaryColor/50 rounded-xl bg-buttonBg/60 p-6 flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors duration-200 hover:bg-buttonBg/70;
+}
+.uploader-drop--active {
+  @apply border-primaryColor bg-buttonBg/80;
 }

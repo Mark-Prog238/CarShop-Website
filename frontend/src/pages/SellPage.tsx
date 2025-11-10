@@ -1,5 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, type MouseEvent, type FormEvent } from "react";
 import { CustomInput } from "../components/CustomInput";
+import { CustomButton } from "../components/CustomButton";
+import { ImageUploader } from "../components/ImageUploader";
+import API from "../components/api";
 import { NavbarSecond } from "../components/NavbarSecond";
 export const Test = () => {
   return (
@@ -28,6 +31,8 @@ export const SellPage = () => {
   const [milage, setMilage] = useState("");
   const [year, setYear] = useState("");
   const [showBasic, setShowBasic] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string>("");
+  const [images, setImages] = useState<File[]>([]);
   // Options
   const [brands, setBrands] = useState<CarMake[]>([]);
   const [models, setModels] = useState<CarModel[]>([]);
@@ -53,6 +58,49 @@ export const SellPage = () => {
     loadModels();
   }, [brand]);
 
+  const canProceed = useMemo(() => {
+    // quick client-side checks to keep the flow fast
+    if (!brand || !model) return false;
+    if (!year || year.length < 4) return false;
+    return true;
+  }, [brand, model, year]);
+
+  const handleNext = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if (!canProceed) {
+      setErrorMsg("Please fill required fields before continuing.");
+      return;
+    }
+    setErrorMsg("");
+    setShowBasic(false);
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    try {
+      const form = new FormData();
+      form.append("brand", brand);
+      form.append("model", model);
+      form.append("year", year);
+      form.append("milage", milage);
+      form.append("hp", hp);
+      form.append("price", price);
+      images.forEach((file, idx) => form.append(`images[${idx}]`, file));
+
+      const res = await fetch(`${API.BASE_URL}${API.ENDPOINTS.LISTINGS.CREATE}` , {
+        method: "POST",
+        body: form,
+      });
+      if (!res.ok) throw new Error("Failed to submit listing");
+      window.alert("Listing submitted! 🎉");
+      setShowBasic(true);
+      // basic reset
+      setBrand(""); setModel(""); setYear(""); setMilage(""); setHp(""); setPrice(""); setImages([]);
+    } catch (err) {
+      setErrorMsg("Could not submit listing right now. Please try again.");
+    }
+  };
+
   return (
     <div>
       <NavbarSecond />
@@ -60,22 +108,30 @@ export const SellPage = () => {
       <div className="h-screen w-screen flex items-center justify-center bg-surfaceColor">
         <div className="flex items-center justify-center bg-buttonBg rounded-lg w-14/15 h-4/6">
           {showBasic ? (
-            <form action="upload" className="w-full h-full">
+            <form action="upload" className="w-full h-full" onSubmit={handleSubmit}>
               <div className="pl-3 pt-3">
-                <h1 className="text-white font-bold text-2xl">
-                  CREATE A LISTING
-                </h1>
+                <h1 className="text-white font-bold text-2xl">CREATE A LISTING</h1>
                 <p className="text-gray-400">Enter Your Vehicle Information</p>
               </div>
-              <div className="flex flex-col">
-                <div className="flex flex-row w-full h-full">
+
+              {/* step indicator */}
+              <div className="px-3 pt-2">
+                <div className="flex items-center gap-2 text-xs text-white/80">
+                  <span className={`${showBasic ? "font-bold" : "opacity-60"}`}>1. Basic</span>
+                  <span>›</span>
+                  <span className={`${!showBasic ? "font-bold" : "opacity-60"}`}>2. Review</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4 p-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
                   <select
                     value={brand}
-                    className="select"
+                    className="select px-3 py-3"
                     onChange={(e) => {
                       e.preventDefault();
                       setBrand(e.target.value);
-                      setModel(""); // reset model when brand changes
+                      setModel("");
                     }}
                   >
                     <option value="">Any Make</option>
@@ -90,7 +146,7 @@ export const SellPage = () => {
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
                     disabled={!brand}
-                    className="select"
+                    className="select px-3 py-3"
                   >
                     <option value="">Any Model</option>
                     {models.map((m) => (
@@ -101,47 +157,65 @@ export const SellPage = () => {
                   </select>
                 </div>
 
-                {/* other info */}
-                <div className="flex flex-row">
-                  {/* <CustomInput
-                  type="text"
-                  label="Vehicle HP"
-                  value={hp}
-                  onChange={setHp}
-                /> */}
-                  {/* <CustomInput
-                  type="text"
-                  label="Price: "
-                  value={price}
-                  onChange={setPrice}
-                /> */}
-                  {/* <CustomInput
-                  type="text"
-                  label="Vehicle Milage: "
-                  value={milage}
-                  onChange={setMilage}
-                /> */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                   <CustomInput
                     type="text"
-                    label="Vehicle Year: "
+                    label="Vehicle Year"
                     value={year}
                     onChange={setYear}
+                    className="input-theme-one"
+                  />
+                  <CustomInput
+                    type="text"
+                    label="Milage"
+                    value={milage}
+                    onChange={setMilage}
+                    className="input-theme-one"
+                  />
+                  <CustomInput
+                    type="text"
+                    label="Horsepower"
+                    value={hp}
+                    onChange={setHp}
+                    className="input-theme-one"
+                  />
+                  <CustomInput
+                    type="text"
+                    label="Price (€)"
+                    value={price}
+                    onChange={setPrice}
+                    className="input-theme-one"
+                  />
+                </div>
+
+                {/* image uploader */}
+                <div className="pt-1">
+                  <p className="text-white/80 text-sm pb-2">Images</p>
+                  <ImageUploader files={images} onChange={setImages} />
+                </div>
+
+                {errorMsg && (
+                  <p className="text-red-300 text-sm">{errorMsg}</p>
+                )}
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <CustomButton
+                    type="button"
+                    label="Next"
+                    className={`btn ${!canProceed ? "opacity-50 cursor-not-allowed" : ""}`}
+                    disabled={!canProceed}
+                    onClick={handleNext}
                   />
                 </div>
               </div>
-              <button
-                type="submit"
-                className="bg-white"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowBasic(false);
-                }}
-              >
-                Next
-              </button>
             </form>
           ) : (
-            <div className="text-white">
+            <div className="text-white w-full h-full p-3">
+              <div className="flex items-center gap-2 text-xs text-white/80 pb-2">
+                <span className="opacity-60">1. Basic</span>
+                <span>›</span>
+                <span className="font-bold">2. Review</span>
+              </div>
               <table className="table-fixed w-full border border-gray-700 border-collapse">
                 <thead className="bg-gray-800">
                   <tr>
@@ -179,14 +253,19 @@ export const SellPage = () => {
                   <Test></Test>
                 </tbody>
               </table>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowBasic(true);
-                }}
-              >
-                BACK
-              </button>
+              <div className="flex justify-between pt-3">
+                <CustomButton
+                  type="button"
+                  label="Back"
+                  className="btn-secondary"
+                  onClick={() => setShowBasic(true)}
+                />
+                <CustomButton
+                  type="submit"
+                  label="Submit Listing"
+                  className="btn"
+                />
+              </div>
             </div>
           )}
         </div>

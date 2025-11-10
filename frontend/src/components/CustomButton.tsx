@@ -1,10 +1,10 @@
-import { forwardRef } from "react";
+import { forwardRef, type MouseEventHandler } from "react";
 
 interface CustomButtonProps {
   label?: string;
   type?: "submit" | "reset" | "button";
   value?: string;
-  onClick?: (value: string) => void;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
   id?: string;
   className?: string;
   disabled?: boolean;

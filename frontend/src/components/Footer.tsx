@@ -1,41 +1,45 @@
 export const Footer = () => {
   return (
-    <footer className="w-full bg-surfaceColor text-black">
-      {/* Divider line */}
-      <div className="my-2 w-full h-[2px] bg-linear-to-r from-primaryColor/10 via-primaryColor to-primaryColor/10" />
-
-      {/* Main footer content */}
-      <div className="w-full px-8 py-12 flex flex-col md:flex-row md:justify-between gap-8">
-        {/* Container 1 */}
-        <div className="flex flex-col space-y-1">
-          <p className="font-semibold mb-2">Socials</p>
-          <a href="">Instagram</a>
-          <a href="">Facebook</a>
-          <a href="">X</a>
-          <a href="">Tiktok</a>
+    <footer className="w-full bg-buttonBg text-white/90 mt-10">
+      <div className="mx-auto max-w-6xl px-6 py-12 grid gap-8 md:grid-cols-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-md bg-primaryColor" />
+            <span className="text-white font-extrabold tracking-wide">CarShop</span>
+          </div>
+          <p className="mt-3 text-white/70 text-sm">Your trusted marketplace for new and used cars.</p>
         </div>
-
-        {/* Container 2 */}
-        <div className="flex flex-col space-y-1">
-          <p className="font-semibold mb-2">Account</p>
-          <a href="">Profile</a>
-          <a href="">Settings</a>
-          <a href="">Logout</a>
+        <div>
+          <p className="font-semibold mb-3">Marketplace</p>
+          <ul className="space-y-2 text-sm">
+            <li><a href="/listings" className="hover:underline">Browse</a></li>
+            <li><a href="/sell" className="hover:underline">Sell your car</a></li>
+            <li><a href="/garage" className="hover:underline">Garage</a></li>
+          </ul>
         </div>
-
-        {/* Container 3 */}
-        <div className="flex flex-col space-y-1">
-          <p className="font-semibold mb-2">TOS</p>
-          <a href="">Privacy Policy</a>
-          <a href="">Terms of Service</a>
-          <a href="">Cookies</a>
+        <div>
+          <p className="font-semibold mb-3">Company</p>
+          <ul className="space-y-2 text-sm">
+            <li><a href="#" className="hover:underline">About</a></li>
+            <li><a href="#" className="hover:underline">Contact</a></li>
+            <li><a href="#" className="hover:underline">Careers</a></li>
+          </ul>
+        </div>
+        <div>
+          <p className="font-semibold mb-3">Legal</p>
+          <ul className="space-y-2 text-sm">
+            <li><a href="#" className="hover:underline">Privacy Policy</a></li>
+            <li><a href="#" className="hover:underline">Terms of Service</a></li>
+            <li><a href="#" className="hover:underline">Cookies</a></li>
+          </ul>
         </div>
       </div>
-
-      {/* Copyright */}
-      <p className="text-sm text-right pr-4 pb-4 text-black/70">
-        Copyright @Mark
-      </p>
+      <div className="border-t border-white/10">
+        <div className="mx-auto max-w-6xl px-6 py-4 text-sm text-white/60 flex items-center justify-between">
+          <p>© {new Date().getFullYear()} CarShop. All rights reserved.</p>
+          <p>Built for demo purposes.</p>
+        </div>
+      </div>
     </footer>
   );
 };
