@@ -5,9 +5,11 @@ import { ImageUploader } from "../components/ImageUploader";
 import API from "../components/api";
 import { 
   ChevronRight, ChevronLeft, CheckCircle, MapPin, Calendar, Gauge, 
-  Settings2, Fuel, Info, Edit2, Car, ShieldCheck, Zap, Plus, X 
+  Settings2, Fuel, Info, Edit2, Car, ShieldCheck, Zap, Plus, X, Lock, 
+  Users, DoorClosed, ArrowRight, UserCheck
 } from "lucide-react";
 
+// Tipi podatkov in konstante
 type CarMake = { id: number; name: string };
 type CarModel = { id: number; name: string };
 
@@ -15,22 +17,23 @@ const BODY_TYPES = ["Sedan", "Hatchback", "SUV", "Wagon", "Coupe", "Convertible"
 
 const EXTENSIVE_FEATURES = [
   "ABS", "Adaptive Cruise Control", "Lane Assist", "Blind Spot Monitor", "Traffic Sign Recognition",
-  "Fatigue Warning", "Emergency Brake Assist", "Isofix", "Alarm System", "Fog Lights",
-  "Laser Headlights", "Matrix LED Headlights", "Xenon Headlights", "Cornering Lights",
-  "Air Conditioning", "Automatic Climate Control (2-zone)", "Automatic Climate Control (3-zone)",
-  "Automatic Climate Control (4-zone)", "Webasto / Aux Heating", "Heated Windshield",
-  "Keyless Entry", "Start-Stop System", "Power Tailgate", "Soft Close Doors",
+  "Webasto / Aux Heating", "Keyless Entry", "Power Tailgate", "Soft Close Doors",
   "Electric Seats", "Memory Seats", "Massage Seats", "Ventilated Seats", "Heated Seats (Front)", "Heated Seats (Rear)",
-  "Leather Seats", "Alcantara Interior", "Ambient Lighting", "Sunroof", "Panoramic Roof",
-  "Navigation System", "Apple CarPlay", "Android Auto", "Bluetooth", "Head-up Display",
-  "Digital Cockpit", "Inductive Phone Charging", "Sound System (Bose/Harman/Burmester)",
-  "Touchscreen", "Voice Control", "WLAN / Wifi Hotspot",
+  "Leather Seats", "Panoramic Roof", "Navigation System", "Apple CarPlay", "Android Auto", "Bluetooth", 
+  "Head-up Display", "Digital Cockpit", "Sound System (Bose/Harman/Burmester)", "Touchscreen", 
   "Parking Sensors (Front)", "Parking Sensors (Rear)", "Rear View Camera", "360° Camera", "Self-steering Parking Assist",
-  "Alloy Wheels", "Sport Package", "Sport Suspension", "Air Suspension", "Tow Bar", "Roof Rails", "Shift Paddles"
+  "Matrix LED Headlights", "Alloy Wheels", "Sport Suspension", "Tow Bar"
 ];
+
 
 export const SellPage = () => {
   const navigate = useNavigate();
+  
+  // --- AUTH STATE (JWT INTEGRACIJA) ---
+  const [token, setToken] = useState<string | null>(null); 
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  // --- FORM STATE ---
   const [step, setStep] = useState(1); 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -56,9 +59,24 @@ export const SellPage = () => {
   const [customFeatureInput, setCustomFeatureInput] = useState("");
   const [images, setImages] = useState<File[]>([]);
 
+  // API Data
   const [brands, setBrands] = useState<CarMake[]>([]);
   const [models, setModels] = useState<CarModel[]>([]);
 
+  // --- AUTH CHECK (JWT) ---
+  useEffect(() => {
+    const storedToken = localStorage.getItem("jwtToken");
+    if (!storedToken) {
+      setTimeout(() => {
+        navigate("/login");
+      }, 1000);
+    } else {
+      setToken(storedToken);
+      setCheckingAuth(false);
+    }
+  }, [navigate]);
+
+  // --- DATA FETCHING (Makes/Models) ---
   useEffect(() => {
     fetch(`${API.BASE_URL}/api/cars/makes`)
       .then(r => r.json())
@@ -74,6 +92,7 @@ export const SellPage = () => {
       .catch(e => console.error(e));
   }, [brand]);
 
+  // --- HANDLERS ---
   const toggleFeature = (feat: string) => {
     if (selectedFeatures.includes(feat)) {
       setSelectedFeatures(selectedFeatures.filter(f => f !== feat));
@@ -98,46 +117,34 @@ export const SellPage = () => {
   };
 
   const handleNext = () => {
+    if (step === 1 && (!brand || !model || !year || !price)) { setError("Please fill in all basic fields."); return; }
+    if (step === 2 && (!milage || !hp)) { setError("Please provide technical details."); return; }
+    if (step === 4 && images.length === 0) { setError("Please upload at least one photo."); return; }
     setError("");
-    if (step === 1 && (!brand || !model || !year || !price)) {
-        setError("Please fill in all basic fields."); return;
-    }
-    if (step === 2 && (!milage || !hp)) {
-        setError("Please provide technical details."); return;
-    }
-    if (step === 4 && images.length === 0) {
-        setError("Please upload at least one photo."); return;
-    }
     setStep((s) => s + 1);
   };
 
   const handleSubmit = async () => {
+    if (!token) { setError("Session expired. Please log in again."); return; }
     setIsLoading(true);
+    
     try {
       const form = new FormData();
-      form.append("brand", brand);
-      form.append("model", model);
-      form.append("year", year);
-      form.append("price", price);
-      form.append("bodyType", bodyType);
-      
-      form.append("milage", milage);
-      form.append("hp", hp);
-      form.append("fuelType", fuelType);
-      form.append("gearbox", gearbox);
-      form.append("driveType", driveType);
-      form.append("doors", doors);
-      form.append("seats", seats);
-      form.append("euroStandard", euroStandard);
-      form.append("vin", vin);
-      form.append("description", description);
-      
-      form.append("features", JSON.stringify(selectedFeatures));
-      
+      // Auth is handled by header, no need for form.append("sellerId", userId)
+      form.append("brand", brand); form.append("model", model); form.append("year", year); form.append("price", price); form.append("bodyType", bodyType);
+      form.append("milage", milage); form.append("hp", hp); form.append("fuelType", fuelType); form.append("gearbox", gearbox);
+      form.append("driveType", driveType); form.append("doors", doors); form.append("seats", seats); form.append("euroStandard", euroStandard);
+      form.append("vin", vin); form.append("description", description);
+      form.append("features", JSON.stringify(selectedFeatures)); // Array to JSON string
+
       images.forEach((file) => form.append("images", file));
 
       const res = await fetch(`${API.BASE_URL}${API.ENDPOINTS.LISTINGS.CREATE}`, {
         method: "POST",
+        // KLJUČNO: Dodamo token v Authorization Header
+        headers: {
+            "Authorization": `Bearer ${token}` 
+        },
         body: form,
       });
 
@@ -152,6 +159,18 @@ export const SellPage = () => {
 
   const formatPrice = (p: string) => new Intl.NumberFormat('en-DE', { style: 'currency', currency: 'EUR' }).format(Number(p));
 
+  // --- LOADING / AUTH SCREEN ---
+  if (checkingAuth) {
+    return (
+        <div className="min-h-screen bg-background flex flex-col items-center justify-center text-white gap-4">
+            <Lock size={48} className="text-primary mb-2" />
+            <h2 className="text-2xl font-bold">Authentication Required</h2>
+            <p className="text-text-muted">Please login to sell your car. Redirecting...</p>
+        </div>
+    );
+  }
+
+  // --- GLAVNI RENDER ---
   return (
     <div className="min-h-screen bg-background flex flex-col pb-20">
       <NavbarSecond />
@@ -205,7 +224,7 @@ export const SellPage = () => {
                         )}
                         <div className="flex gap-4 pt-4 border-t border-white/10">
                             <button onClick={() => setStep(1)} className="flex-1 py-3 rounded-xl border border-white/10 text-text-muted hover:bg-white/5 hover:text-white">Edit</button>
-                            <button onClick={handleSubmit} disabled={isLoading} className="flex-[2] py-3 bg-secondary hover:bg-secondary-hover text-white font-bold rounded-xl shadow-lg">{isLoading ? "Publishing..." : "Publish Listing"}</button>
+                            <button onClick={handleSubmit} disabled={isLoading} className="flex-[2] py-3 bg-secondary hover:bg-secondary-hover text-white font-bold rounded-xl shadow-lg">{isLoading ? "Publishing..." : "Confirm & Publish Listing"}</button>
                         </div>
                     </div>
                 </div>

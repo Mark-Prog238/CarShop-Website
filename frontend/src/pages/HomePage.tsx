@@ -56,14 +56,13 @@ export const HomePage = () => {
     (async () => {
       try {
         const res = await fetchListings();
-        const items = (res.data || []).slice(0, 3); // Pokaži samo top 3
+        const items = (res.data || []).slice(0, 3);
         setFeatured(items);
       } catch {}
     })();
   }, []);
 
   const handleSearch = () => {
-    // Sestavi URL za iskanje
     const query = new URLSearchParams();
     if (make) query.set("make", make);
     if (model) query.set("model", model);
@@ -111,7 +110,7 @@ export const HomePage = () => {
             Verified dealers, transparent pricing, instant listings.
           </motion.p>
 
-          {/* --- SEARCH BOX (Floating Card) --- */}
+          {/* --- SEARCH BOX --- */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -172,11 +171,11 @@ export const HomePage = () => {
                 </div>
               </div>
 
-              {/* Search Button */}
+              {/* Search btn */}
               <div className="flex items-end">
                 <Button 
                   onClick={handleSearch}
-                  className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg shadow-lg shadow-blue-900/20"
+                  className="items- justify-center flex w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg shadow-lg shadow-blue-900/20"
                 >
                   <Search className="mr-2" size={20} /> Search
                 </Button>
@@ -240,8 +239,8 @@ export const HomePage = () => {
           <h2 className="text-4xl font-bold mb-6">Ready to Sell Your Car?</h2>
           <p className="text-xl text-blue-100 mb-8">Join thousands of satisfied sellers. Get the best price for your vehicle today.</p>
           <Link to="/sell">
-            <Button className="bg-white text-blue-900 hover:bg-gray-100 font-bold text-lg px-10 py-6 rounded-full shadow-xl">
-              List Your Car for Free
+            <Button className="bg-white  hover:bg-gray-100 px-10 py-6 rounded-full shadow-xl">
+              <p className="text-blue-900 font-bold text-lg">List Your Car for Free</p>
             </Button>
           </Link>
         </div>

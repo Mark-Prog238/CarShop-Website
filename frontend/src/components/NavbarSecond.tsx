@@ -1,19 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../ui/Button";
-import { Link, useLocation } from "react-router"; 
-import { Menu, X, User } from "lucide-react";
-import { Logo } from "./Logo"; // <--- UVOZI NOVI LOGO
+import { Link, useLocation, useNavigate } from "react-router-dom"; // Pravilni uvozi za Vite/React Router
+import { Menu, X, User, LogOut } from "lucide-react"; // Ikone
+import { Logo } from "./Logo"; // Tvoj novi DRIVEX logo
 
 export const NavbarSecond = () => {
-  const [open, setOpen] = useState(false);
-  const location = useLocation(); 
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const [open, setOpen] = useState(false); // Mobile menu state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState('');
+
+  // --- AUTH STATUS CHECK ---
+  useEffect(() => {
+    const token = localStorage.getItem("jwtToken");
+    const name = localStorage.getItem("userName");
+    
+    setIsLoggedIn(!!token);
+    setUserName(name || '');
+    setOpen(false); // Zapri meni ob navigaciji
+  }, [location.pathname]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("jwtToken");
+    localStorage.removeItem("userName");
+    setIsLoggedIn(false);
+    navigate("/login");
+  };
+  
+  // Helper funkcija za aktivne linke (če želimo vizualno označiti stran)
   const isActive = (path: string) => location.pathname === path;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0f111a]/80 backdrop-blur-xl">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         
-        {/* --- BRAND LOGO (APEX MOTORS) --- */}
+        {/* --- BRAND LOGO (DRIVEX) --- */}
         <Link to="/">
            <Logo /> 
         </Link>
@@ -23,7 +46,7 @@ export const NavbarSecond = () => {
           <li>
             <Link 
               to="/listings" 
-              className={`transition-all duration-200 hover:text-blue-400 ${isActive('/listings') ? 'text-white font-bold' : ''}`}
+              className={`transition-all duration-200 hover:text-primary ${isActive('/listings') ? 'text-white font-bold' : ''}`}
             >
               Inventory
             </Link>
@@ -31,23 +54,37 @@ export const NavbarSecond = () => {
            <li>
             <Link 
               to="/garage" 
-              className={`transition-all duration-200 hover:text-blue-400 ${isActive('/garage') ? 'text-white font-bold' : ''}`}
+              className={`transition-all duration-200 hover:text-primary ${isActive('/garage') ? 'text-white font-bold' : ''}`}
             >
               Garage
             </Link>
           </li>
         </ul>
 
-        {/* --- DESKTOP ACTIONS --- */}
+        {/* --- DESKTOP ACTIONS (LOGIN/LOGOUT/SELL) --- */}
         <div className="hidden md:flex items-center gap-4">
-          <Link 
-            to="/login" 
-            className="flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-white transition-colors"
-          >
-            <User size={18} /> Login
-          </Link>
+          
+          {isLoggedIn ? (
+            <>
+                <span className="text-sm text-gray-400">Welcome, <strong className="text-white">{userName.split(' ')[0]}</strong></span>
+                <button 
+                    onClick={handleLogout} 
+                    className="flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-red-400 transition-colors"
+                >
+                    <LogOut size={18} /> Logout
+                </button>
+            </>
+          ) : (
+            <Link 
+                to="/login" 
+                className="flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-white transition-colors"
+            >
+                <User size={18} /> Login
+            </Link>
+          )}
+
           <Link to="/sell">
-            <Button size="sm" className="bg-blue-600 hover:bg-blue-500 hover:scale-105 text-white border-none shadow-lg shadow-blue-900/20 transition-all font-bold">
+            <Button size="sm" className="bg-secondary hover:bg-secondary-hover hover:scale-[1.03] text-white border-none shadow-lg shadow-secondary/20 transition-all font-bold">
               Sell Your Car
             </Button>
           </Link>
@@ -63,38 +100,35 @@ export const NavbarSecond = () => {
         </button>
       </nav>
 
-      {/* --- MOBILE MENU --- */}
+      {/* --- MOBILE MENU PANEL --- */}
       {open && (
         <div className="absolute top-full left-0 w-full border-b border-white/10 bg-[#0f111a] px-4 pb-6 shadow-2xl md:hidden animate-in slide-in-from-top-5 duration-200">
           <ul className="flex flex-col gap-2 pt-4">
             <li>
-              <Link 
-                to="/listings" 
-                className="block rounded-lg px-4 py-3 text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white"
-                onClick={() => setOpen(false)}
-              >
+              <Link to="/listings" className="block rounded-lg px-4 py-3 text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white" onClick={() => setOpen(false)}>
                 Inventory
               </Link>
             </li>
-            <div className="my-2 h-px bg-white/10" />
             <li>
-              <Link 
-                to="/sell" 
-                className="block rounded-lg px-4 py-3 text-base font-bold text-blue-400 hover:bg-blue-500/10"
-                onClick={() => setOpen(false)}
-              >
+              <Link to="/sell" className="block rounded-lg px-4 py-3 text-base font-bold text-secondary hover:bg-secondary/10" onClick={() => setOpen(false)}>
                 + Sell your car
               </Link>
             </li>
-             <li>
-              <Link 
-                to="/login" 
-                className="block rounded-lg px-4 py-3 text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white"
-                onClick={() => setOpen(false)}
-              >
-                Login
-              </Link>
-            </li>
+            <div className="my-2 h-px bg-white/10" />
+            
+            {isLoggedIn ? (
+                <li>
+                    <button onClick={handleLogout} className="w-full text-left rounded-lg px-4 py-3 text-base font-medium text-red-400 hover:bg-white/5">
+                        <LogOut size={18} className="inline mr-2"/> Logout
+                    </button>
+                </li>
+            ) : (
+                <li>
+                    <Link to="/login" className="block rounded-lg px-4 py-3 text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white" onClick={() => setOpen(false)}>
+                        Login / Register
+                    </Link>
+                </li>
+            )}
           </ul>
         </div>
       )}

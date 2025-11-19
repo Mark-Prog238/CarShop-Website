@@ -1,12 +1,12 @@
 const API = {
-  BASE_URL: "https://drivex-backend-iiyg.onrender.com",
+  BASE_URL: import.meta.env.BACKEND_URL || "http://localhost:8000",
   ENDPOINTS: {
-    LOGIN: "/api/login",
-    REGISTER: "/api/register",
-    LISTINGS: {
-      CREATE: "/api/listings",
+      LOGIN: "/api/login",
+      REGISTER: "/api/register",
+      LISTINGS: {
+        CREATE: "/api/listings",
+      },
     },
-  },
 };
 // ... ostalo pusti enako
 export const fetchListings = async () => {
