@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom"; // Use 'react-router-dom' for Vite
+import { useParams } from "react-router-dom"; 
 import { NavbarSecond } from "../components/NavbarSecond";
 import { fetchListingById } from "../components/api";
 import { 
@@ -13,24 +13,27 @@ import {
   Info, 
   ShieldCheck,
   Zap,
-  ArrowLeft
+  ArrowLeft,
+  Phone
 } from "lucide-react";
 
 // Base URL for images
-const API_URL = "http://localhost:8000";
+const API_URL = "http://localhost:8000"; // Uporabljamo localhost za lokalni dev
 
 export const ListingDetailPage = () => {
   const { id } = useParams();
   const [listing, setListing] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState<string>("");
+  const [sellerPhone, setSellerPhone] = useState<string | null>(null); // State za telefon
+  const [phoneLoading, setPhoneLoading] = useState(false); // State za loading
 
-  // Helper to get correct image URL (local or external)
   const getImageUrl = (src: string) => {
     if (!src) return "";
-    return src.startsWith("http") ? src : `${API_URL}${src}`;
+    return src.startsWith("http") ? src : `${API_URL}${src}`; 
   };
 
+  // --- FETCH GLAVNIH PODATKOV ---
   useEffect(() => {
     const load = async () => {
       if (!id) return;
@@ -39,7 +42,6 @@ export const ListingDetailPage = () => {
         const data = res.data;
         setListing(data || null);
         
-        // Set the first image as active immediately
         if (data?.images?.length) {
           setActiveImage(getImageUrl(data.images[0]));
         }
@@ -50,6 +52,27 @@ export const ListingDetailPage = () => {
     load();
   }, [id]);
 
+  // --- FUNKCIJA ZA PRIKAZ TELEFONA ---
+  const handleShowPhone = async () => {
+    if (!id || sellerPhone || phoneLoading) return;
+    setPhoneLoading(true);
+    try {
+        // Klic na backend ruto, ki smo jo dodali
+        const res = await fetch(`${API_URL}/api/listings/${id}/contact`);
+        const json = await res.json();
+        
+        if (json.success) {
+            setSellerPhone(json.phone);
+        } else {
+            setSellerPhone("N/A - Kontakt ni na voljo");
+        }
+    } catch (e) {
+        setSellerPhone("Napaka pri povezavi.");
+    } finally {
+        setPhoneLoading(false);
+    }
+  };
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-DE', { style: 'currency', currency: 'EUR' }).format(value);
   };
@@ -57,6 +80,20 @@ export const ListingDetailPage = () => {
   const formatNumber = (value: number) => {
     return new Intl.NumberFormat('en-DE').format(value);
   };
+
+  const spec = {
+    bodyType: listing?.bodyType || "—",
+    driveType: listing?.driveType || "—",
+    euroStandard: listing?.euroStandard || "—",
+    doors: listing?.doors || "—",
+    seats: listing?.seats || "—",
+    hp: listing?.hp || "—",
+    kW: listing?.kW || "—",
+    engineDisplacement: listing?.engineDisplacement || "—",
+    vin: listing?.vin,
+    features: listing?.features || [],
+  };
+
 
   if (loading) return (
     <div className="min-h-screen bg-background grid place-items-center text-text-muted">
@@ -128,7 +165,6 @@ export const ListingDetailPage = () => {
                   <div className="w-full h-full grid place-items-center text-text-muted">No Images Available</div>
                 )}
                 
-                {/* Status Badge */}
                 <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md border border-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg uppercase tracking-wider flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                   {listing.status || "Active"}
@@ -161,10 +197,10 @@ export const ListingDetailPage = () => {
             {/* QUICK STATS GRID */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
+                { label: "Body Type", value: spec.bodyType, icon: <Car size={18}/> },
                 { label: "Year", value: listing.year, icon: <Calendar size={18}/> },
                 { label: "Mileage", value: `${formatNumber(listing.milage)} km`, icon: <Gauge size={18}/> },
-                { label: "Gearbox", value: listing.gearbox, icon: <Settings2 size={18}/> },
-                { label: "Fuel", value: listing.fuelType, icon: <Fuel size={18}/> },
+                { label: "Drive Type", value: spec.driveType, icon: <Settings2 size={18}/> },
               ].map((stat, i) => (
                   <div key={i} className="bg-surface p-4 rounded-xl border border-white/5 flex flex-col items-center text-center hover:border-primary/30 transition-colors">
                       <div className="text-primary mb-2 bg-primary/10 p-2 rounded-lg">{stat.icon}</div>
@@ -189,9 +225,9 @@ export const ListingDetailPage = () => {
                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-white">
                 <Zap size={22} className="text-secondary"/> Features & Equipment
               </h2>
-              {listing.features && listing.features.length > 0 ? (
+              {spec.features.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
-                  {listing.features.map((feature: string, i: number) => (
+                  {spec.features.map((feature: string, i: number) => (
                     <div key={i} className="flex items-center gap-3 text-gray-300 p-2 rounded-lg hover:bg-white/5 transition-colors">
                       <CheckCircle2 size={18} className="text-secondary flex-shrink-0" />
                       <span className="text-sm">{feature}</span>
@@ -220,9 +256,20 @@ export const ListingDetailPage = () => {
               </div>
               
               <div className="space-y-3">
-                <button className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-primary/20 transform hover:scale-[1.02]">
-                    Show Phone Number
-                </button>
+                {sellerPhone ? (
+                    <div className="w-full bg-secondary text-white font-black text-center py-4 rounded-xl text-lg animate-in fade-in flex items-center justify-center gap-2">
+                        <Phone size={18}/> {sellerPhone}
+                    </div>
+                ) : phoneLoading ? (
+                    <button disabled className="w-full bg-primary/50 text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 cursor-wait">
+                        Loading...
+                    </button>
+                ) : (
+                    <button onClick={handleShowPhone} className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-primary/20 transform hover:scale-[1.02]">
+                        Show Phone Number
+                    </button>
+                )}
+                
                 <button className="w-full bg-transparent border-2 border-white/10 text-white hover:bg-white/5 font-bold py-4 rounded-xl transition-all">
                     Send Message
                 </button>
@@ -240,16 +287,16 @@ export const ListingDetailPage = () => {
               </h3>
               <div className="space-y-0 divide-y divide-white/5 text-sm">
                  {[
-                    { label: "Body Type", val: listing.bodyType },
-                    { label: "Drive Type", val: listing.driveType },
-                    { label: "Power", val: `${listing.hp} HP / ${listing.kW} kW` },
-                    { label: "Engine Size", val: `${listing.engineDisplacement} ccm` },
-                    { label: "Doors / Seats", val: `${listing.doors} / ${listing.seats}` },
-                    { label: "Emission Class", val: listing.euroStandard },
+                    { label: "Body Type", val: spec.bodyType },
+                    { label: "Drive Type", val: spec.driveType },
+                    { label: "Power", val: `${spec.hp} HP / ${spec.kW} kW` },
+                    { label: "Engine Size", val: `${spec.engineDisplacement} ccm` },
+                    { label: "Doors / Seats", val: `${spec.doors} / ${spec.seats}` },
+                    { label: "Emission Class", val: spec.euroStandard },
                  ].map((row, i) => (
                     <div key={i} className="flex justify-between py-3 first:pt-0">
                         <span className="text-text-muted">{row.label}</span>
-                        <span className="font-medium text-white">{row.val || "—"}</span>
+                        <span className="font-medium text-white">{row.val}</span>
                     </div>
                  ))}
                  
@@ -258,7 +305,7 @@ export const ListingDetailPage = () => {
                     <ShieldCheck size={14}/> VIN Number
                   </span>
                   <span className="font-mono text-xs text-primary bg-primary/10 px-2 py-1 rounded border border-primary/20">
-                    {listing.vin || "HIDDEN"}
+                    {spec.vin || "HIDDEN"}
                   </span>
                 </div>
               </div>

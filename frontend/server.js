@@ -84,27 +84,22 @@ app.use(cors({
   origin: [FRONTEND_URL, "http://localhost:5173"],
   credentials: true
 }));
-app.use(express.json());
 app.use("/uploads", express.static(UPLOAD_DIR));
-
 
 // --- ROUTES ---
 
-// 1. LOGIN (Generira Token)
-app.post("/api/login", async (req, res) => {
+app.post("/api/login", express.json(), async (req, res) => {
     try {
         const { email, password } = req.body;
         const users = db.collection("users");
         const user = await users.findOne({ email });
         
         if (!user) return res.status(401).json({ success: false, message: "Invalid credentials" });
-
         const isMatch = await bcrypt.compare(password, user.password); 
-        
         if (!isMatch) return res.status(401).json({ success: false, message: "Invalid credentials" });
         
         const token = jwt.sign(
-            { userId: user._id, email: user.email },
+            { userId: user._id.toHexString(), email: user.email },
             JWT_SECRET,
             { expiresIn: '7d' }
         );
@@ -121,42 +116,44 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
-// 2. REGISTER
-app.post("/api/register", async (req, res) => {
+app.post("/api/register", express.json(), async (req, res) => {
     try {
-        const { fullName, email, password } = req.body; 
+        const { fullName, email, password, phone, address, profileType, companyName } = req.body; 
         const users = db.collection("users");
+        
         if (await users.findOne({ email })) {
             return res.status(400).json({ success: false, message: "User already exists" });
         }
         
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        const result = await users.insertOne({ fullName, email, password: hashedPassword, createdAt: new Date() });
-        res.status(201).json({ success: true, userId: result.insertedId });
+        await users.insertOne({ 
+            fullName, email, password: hashedPassword, phone, address, profileType, companyName: companyName || null, profileStatus: 'complete', createdAt: new Date() 
+        });
+        
+        res.status(201).json({ success: true, message: "Registration and profile setup complete." });
     } catch(e) { 
-        console.error("❌ Register Error:", e);
+        console.error("❌ Register Complete Error:", e);
         res.status(500).json({ success: false, message: "Server error" });
     }
 });
 
 
-// 3. CREATE LISTING (ZAŠČITENA RUTA)
-app.post("/api/listings", authMiddleware, upload.array("images"), async (req, res) => {
+app.post("/api/listings", upload.array("images"), async (req, res) => {
   try {
+    // Multer je zdaj že parsal body v req.body
     const { 
       brand, model, price, year, milage, hp, description,
       bodyType, fuelType, gearbox, vin, driveType, doors, seats, euroStandard, features,
-      sellerId // <- Določeno iz JWT
+      sellerId 
     } = req.body;
     
-    // Zberi poti do lokalno shranjenih datotek
+    // ... (ostala logika) ...
+
     const imageUrls = (req.files || []).map(file => {
-      // Pot, ki jo bo uporabil Frontend za dostop do slike
       return `${PUBLIC_URL}/uploads/${file.filename}`;
     });
 
-    // Ostala logika (Pretvorbe & Shranjevanje)
     const calculatedKw = hp ? Math.round(Number(hp) * 0.7457) : undefined;
     let parsedFeatures = [];
     if (features) { try { parsedFeatures = JSON.parse(features); } catch (e) {} }
@@ -174,13 +171,12 @@ app.post("/api/listings", authMiddleware, upload.array("images"), async (req, re
     };
 
     await db.collection("listings").insertOne(newListing);
-    res.status(201).json({ success: true });
+    res.status(201).json({ success: true, message: "Listing created." });
   } catch (e) {
     console.error("❌ Upload Error:", e);
     res.status(500).json({ success: false, message: "Server error during upload" });
   }
 });
-
 
 // 4. GET ALL LISTINGS
 app.get("/api/listings", async (_req, res) => {
@@ -191,7 +187,7 @@ app.get("/api/listings", async (_req, res) => {
 });
 
 // 5. GET SINGLE LISTING (Unprotected)
-app.get("/api/listings/:id", async (req, res) => { // POPRAVIL: Iz "listing" v "listings"
+app.get("/api/listing/:id", async (req, res) => { // POPRAVIL: Iz "listing" v "listings"
   try {
     const { id } = req.params;
     let query;
@@ -225,4 +221,52 @@ app.get("/api/cars/models/:make", async (req, res) => {
     const j = await resp.json();
     res.json({ data: j.data || [] });
   } catch { res.json({ data: [] }); }
+});
+
+
+
+
+// garaza
+app.get("/api/users/:userId/listings", async (req, res) => {
+    try {
+        const userId = req.params.userId;
+                console.log("🔍 SellerID from Token:", userId);
+        const sellerObjectId = new ObjectId(userId); 
+
+        const userListings = await db.collection("listings").find({ 
+            sellerId: sellerObjectId // Išči strogo po ObjectId
+        }).sort({ createdAt: -1 }).toArray();
+
+        res.json({ success: true, data: userListings });
+    } catch (e) {
+        console.error("❌ Garage Fetch Error:", e);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+
+// kontakt 
+app.get("/api/listings/:id/contact", async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: "Invalid listing ID" });
+        }
+
+        // 1. Najdi prodajalčev ID iz oglasa
+        const listing = await db.collection("listings").findOne({ _id: new ObjectId(id) }, { projection: { sellerId: 1 } });
+        
+        if (!listing) return res.status(404).json({ success: false, message: "Listing not found" });
+
+        // 2. Najdi telefon prodajalca (shranjen je kot string)
+        const seller = await db.collection("users").findOne({ _id: listing.sellerId }, { projection: { phone: 1 } });
+        
+        if (!seller || !seller.phone) return res.status(404).json({ success: false, message: "Contact not available" });
+
+        res.json({ success: true, phone: seller.phone });
+    } catch (e) {
+        console.error("❌ Contact Fetch Error:", e);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
 });

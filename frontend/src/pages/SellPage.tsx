@@ -125,7 +125,13 @@ export const SellPage = () => {
   };
 
   const handleSubmit = async () => {
-    if (!token) { setError("Session expired. Please log in again."); return; }
+    const token = localStorage.getItem("jwtToken"); 
+    
+    if (!token) {
+        setError("Session expired. Please log in again.");
+        return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -141,10 +147,6 @@ export const SellPage = () => {
 
       const res = await fetch(`${API.BASE_URL}${API.ENDPOINTS.LISTINGS.CREATE}`, {
         method: "POST",
-        // KLJUČNO: Dodamo token v Authorization Header
-        headers: {
-            "Authorization": `Bearer ${token}` 
-        },
         body: form,
       });
 
