@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { MongoClient, ObjectId } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb"; // ObjectId uvozimo direktno!
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -21,12 +21,12 @@ if (!MONGODB_URI || !JWT_SECRET) {
   process.exit(1);
 }
 
-// Setup paths for file storage
+// Setup paths
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 
-// Zagotovi, da mapa za nalaganje obstaja
+// Zagotovi, da mapa obstaja
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR);
 }
@@ -40,7 +40,8 @@ let db;
 async function startServer() {
   try {
     await client.connect();
-    db = client.db("avtoDB");
+    // Uporabimo potrjeno ime baze
+    db = client.db("avtoDB"); 
     console.log("✅ Connected to MongoDB");
     
     app.listen(PORT, () => {
@@ -55,13 +56,8 @@ startServer();
 
 // --- MULTER (Lokalno Shranjevanje) ---
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, UPLOAD_DIR);
-    },
-    filename: (req, file, cb) => {
-        // Doda timestamp, da zagotovi unikatnost
-        cb(null, Date.now() + '-' + file.originalname);
-    }
+    destination: (req, file, cb) => { cb(null, UPLOAD_DIR); },
+    filename: (req, file, cb) => { cb(null, Date.now() + '-' + file.originalname); }
 });
 const upload = multer({ storage });
 
@@ -89,7 +85,6 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-// Serviraj naložene datoteke kot statične datoteke
 app.use("/uploads", express.static(UPLOAD_DIR));
 
 
@@ -104,13 +99,10 @@ app.post("/api/login", async (req, res) => {
         
         if (!user) return res.status(401).json({ success: false, message: "Invalid credentials" });
 
-        // Predpostavljam, da imate v bazi shranjena hashirana gesla
         const isMatch = await bcrypt.compare(password, user.password); 
-        // Če še nimate bcrypta: const isMatch = (password === "nekaj");
         
         if (!isMatch) return res.status(401).json({ success: false, message: "Invalid credentials" });
         
-        // Generiranje JWT
         const token = jwt.sign(
             { userId: user._id, email: user.email },
             JWT_SECRET,
@@ -199,14 +191,15 @@ app.get("/api/listings", async (_req, res) => {
 });
 
 // 5. GET SINGLE LISTING (Unprotected)
-app.get("/api/listing/:id", async (req, res) => {
+app.get("/api/listings/:id", async (req, res) => { // POPRAVIL: Iz "listing" v "listings"
   try {
     const { id } = req.params;
     let query;
+    // Robusno iskanje po ObjectId ali String
     if (ObjectId.isValid(id)) {
-        query = { _id: new ObjectId(id) };
+        query = { $or: [{ _id: new ObjectId(id) }, { _id: id }] };
     } else {
-        query = { _id: id }; // Redundanca, za vsak slučaj
+        query = { _id: id }; 
     }
     const doc = await db.collection("listings").findOne(query);
     if (!doc) return res.status(404).json({ success: false, message: "Not found" });
@@ -217,8 +210,7 @@ app.get("/api/listing/:id", async (req, res) => {
 });
 
 
-// othr shit
-// 3. Car Data Proxy
+// 6. Car Data Proxy (Ostale rute)
 app.get("/api/cars/makes", async (_req, res) => {
   try {
     const resp = await fetch("https://carapi.app/api/makes/v2");
