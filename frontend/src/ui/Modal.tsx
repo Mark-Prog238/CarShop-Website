@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export const Modal = ({ open, onClose, children }: { open: boolean; onClose: () => void; children: ReactNode }) => {
