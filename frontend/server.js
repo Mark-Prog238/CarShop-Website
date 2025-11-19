@@ -7,7 +7,6 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 
-// --- KONFIGURACIJA IZ ENV ---
 const PORT = process.env.PORT || 8000;
 const MONGODB_URI = process.env.MONGODB_URI;
 const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
@@ -18,22 +17,18 @@ if (!MONGODB_URI) {
   process.exit(1);
 }
 
-// Priprava poti
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// --- CORS (Varnost) ---
-// Dovolimo dostop samo tvojemu Frontendu (Lokalno ali Vercel)
 app.use(cors({
-  origin: [FRONTEND_URL, "http://localhost:5173"], // Dovolimo oboje za vsak slučaj
+  origin: [FRONTEND_URL, "http://localhost:5173"],
   credentials: true
 }));
 
 app.use(express.json());
 
-// --- STATIC FILES (Slike) ---
 const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 app.use("/uploads", express.static(uploadsDir));
@@ -42,7 +37,6 @@ app.use("/uploads", express.static(uploadsDir));
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadsDir),
   filename: (_req, file, cb) => {
-    // Počistimo ime datoteke šumnikov in presledkov
     const safeName = file.originalname.replace(/[^a-zA-Z0-9.]/g, "_");
     cb(null, `${Date.now()}_${safeName}`);
   },
