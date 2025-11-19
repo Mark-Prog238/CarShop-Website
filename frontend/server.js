@@ -152,7 +152,7 @@ app.get("/api/listings", async (_req, res) => {
 });
 
 // 6. GET SINGLE
-app.get("/api/listings/:id", async (req, res) => {
+app.get("/api/listing/:id", async (req, res) => {
   try {
     const { id } = req.params;
     let query;
