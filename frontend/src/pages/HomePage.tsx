@@ -246,7 +246,7 @@ export const HomePage = () => {
                 key={b}
                 className="rounded-lg border border-black/10 bg-white px-4 py-3 text-center text-black/80 hover:shadow-md transition-shadow"
               >
-                {b}
+                <button onClick={() => {}}>{b}</button>
               </div>
             ))}
           </div>
