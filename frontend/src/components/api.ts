@@ -1,5 +1,5 @@
 const API = {
-  BASE_URL: import.meta.env.BACKEND_URL || "http://localhost:8000",
+  BASE_URL: import.meta.env.BACKEND_URL || "https://drivex-backend-iiyg.onrender.com",
   ENDPOINTS: {
       LOGIN: "/api/login",
       REGISTER: "/api/register",
