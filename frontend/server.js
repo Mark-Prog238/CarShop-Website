@@ -9,7 +9,7 @@ import { fileURLToPath } from "url";
 
 const PORT = process.env.PORT || 8000;
 const MONGODB_URI = process.env.MONGODB_URI;
-const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
+const BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${PORT}`;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 if (!MONGODB_URI) {
@@ -55,7 +55,7 @@ async function startServer() {
     
     app.listen(PORT, () => {
       console.log(`🚀 Server teče na portu ${PORT}`);
-      console.log(`🌍 Public URL: ${PUBLIC_URL}`);
+      console.log(`🌍 Public URL: ${BACKEND_URL}`);
       console.log(`🔒 Dovoljen Frontend: ${FRONTEND_URL}`);
     });
   } catch (e) {
@@ -114,8 +114,8 @@ app.post("/api/listings", upload.array("images"), async (req, res) => {
       bodyType, fuelType, gearbox, vin, driveType, doors, seats, euroStandard, features 
     } = req.body;
     
-    // UPORABA PUBLIC_URL IZ .ENV
-    const imageUrls = req.files.map(file => `${PUBLIC_URL}/uploads/${file.filename}`);
+    // UPORABA BACKEND_URL IZ .ENV
+    const imageUrls = req.files.map(file => `${BACKEND_URL}/uploads/${file.filename}`);
 
     const calculatedKw = hp ? Math.round(Number(hp) * 0.7457) : undefined;
 
