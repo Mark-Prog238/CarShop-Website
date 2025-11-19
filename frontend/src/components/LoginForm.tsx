@@ -1,76 +1,142 @@
-import { CustomInput } from "./CustomInput.tsx";
-import { CustomButton } from "../components/CustomButton";
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import API from "../components/api"; 
+import { CustomInput } from "./CustomInput";
+import { CustomButton } from "../components/CustomButton"; // Preveri, če ta gumb podpira className prop!
 import { Translations } from "../components/Data";
-import React, { useState } from "react";
-import API from "./api.ts";
-import { Link } from "react-router";
-import EyeHidden from "../assets/icons/eye-slash-solid-full.svg";
-import EyeShow from "../assets/icons/eye-solid-full.svg";
+import { Eye, EyeOff, LogIn, ArrowRight } from "lucide-react"; // Uporabi Lucide ikone namesto SVG datotek
 
 export const LoginForm = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(email, password);
+    setError("");
+    setLoading(true);
+
     try {
       const response = await fetch(`${API.BASE_URL}${API.ENDPOINTS.LOGIN}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
+
       const data = await response.json();
-      console.log("response from server: ", data);
+
+      if (data.success) {
+        navigate("/"); 
+      } else {
+        setError(data.message || "Login failed");
+      }
     } catch (error) {
-      console.error("error during login: ", error);
+      console.error("Error:", error);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="login-form-style w-100 h-100">
-      <h1 className="font-bold text-white pb-15 text-[4vh]">
-        {Translations.EN.login}
-      </h1>
-      <form className="flex flex-col gap-3" onSubmit={handleLogin}>
-        <CustomInput
-          type="email"
-          name="email"
-          id="email"
-          value={email}
-          onChange={setEmail}
-          label="Your Email"
-          className=" text-white/80 pl-3"
-        />
-        <CustomInput
-          type={showPassword ? "text" : "password"}
-          label="Password"
-          value={password}
-          onChange={setPassword}
-          className=" text-white/80 pl-3"
-          icon={showPassword ? EyeShow : EyeHidden}
-          iconStyle="fill-white"
-          iconEvent={() => setShowPassword(!showPassword)}
-        />
-        <svg
-          className="absolute right-2 top-3 size-5 cursor-pointer fill-white"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 576 512"
-        >
-          <path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6-46.8 43.5-78.1 95.4-93 131.1-3.3 7.9-3.3 16.7 0 24.6 14.9 35.7 46.2 87.7 93 131.1 47.1 43.7 111.8 80.6 192.6 80.6s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1 3.3-7.9 3.3-16.7 0-24.6-14.9-35.7-46.2-87.7-93-131.1-47.1-43.7-111.8-80.6-192.6-80.6zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-64c0 35.3-28.7 64-64 64-11.5 0-22.3-3-31.7-8.4-1 10.9-.1 22.1 2.9 33.2 13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-12.2-45.7-55.5-74.8-101.1-70.8 5.3 9.3 8.4 20.1 8.4 31.7z" />
-        </svg>
-        <CustomButton
-          label="LOGIN"
-          type="submit"
-          className="w-full mt-4 h-9 font-bold text-gray-300/90 "
-        />
-        <div className="w-full h-px bg-linear-to-r from-transparent via-white/10 to-transparent my-4"></div>
-      </form>
+    <div className="flex min-h-[80vh] items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        
+        {/* --- CARD CONTAINER --- */}
+        <div className="bg-surface border border-white/10 rounded-2xl shadow-2xl p-8 md:p-10 relative overflow-hidden">
+          
+          {/* Dekorativni sijaj zgoraj */}
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-primary"></div>
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/20 rounded-full blur-3xl"></div>
 
-      <Link to="/register" className="text-gray-500/70 text-sm font-inter">
-        Don`t have an account? Register Here
-      </Link>
+          {/* Header */}
+          <div className="mb-8 text-center relative z-10">
+            <h1 className="text-3xl font-black text-white tracking-tight mb-2">
+              {Translations.EN.login}
+            </h1>
+            <p className="text-text-muted text-sm">Welcome back to DriveX</p>
+          </div>
+
+          {/* Form */}
+          <form className="flex flex-col gap-5 relative z-10" onSubmit={handleLogin}>
+            
+            {/* Error Message */}
+            {error && (
+              <div className="p-3 bg-red-500/10 border border-red-500/50 text-red-400 text-sm rounded-lg flex items-center gap-2 animate-pulse">
+                ⚠️ {error}
+              </div>
+            )}
+
+            {/* Email Input */}
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-text-muted uppercase tracking-wider ml-1">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-background border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-white/20"
+                placeholder="name@example.com"
+                required
+              />
+            </div>
+
+            {/* Password Input */}
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-text-muted uppercase tracking-wider ml-1">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-background border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-white/20 pr-12"
+                  placeholder="••••••••"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Login Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full mt-4 bg-primary hover:bg-primary-hover text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/25 transition-all transform hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                "Logging in..."
+              ) : (
+                <>
+                  LOGIN <ArrowRight size={20} />
+                </>
+              )}
+            </button>
+
+            {/* Divider */}
+            <div className="flex items-center gap-4 my-2">
+              <div className="h-px bg-white/10 flex-1"></div>
+              <span className="text-xs text-text-muted uppercase">OR</span>
+              <div className="h-px bg-white/10 flex-1"></div>
+            </div>
+          </form>
+
+          {/* Footer Link */}
+          <div className="text-center mt-4">
+            <Link to="/register" className="text-sm text-text-muted hover:text-secondary transition-colors font-medium">
+              Don't have an account? <span className="text-secondary underline decoration-secondary/50 underline-offset-4">Register here</span>
+            </Link>
+          </div>
+
+        </div>
+      </div>
     </div>
   );
 };

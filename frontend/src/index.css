@@ -1,99 +1,60 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap");
 @import "tailwindcss";
 
 @theme {
-  /* Updated palette: Indigo + Amber with soft slate backgrounds */
-  --color-buttonBg: oklch(0.22 0.03 250); /* card/panel background (slate) */
-  --color-bgSecond: oklch(0.98 0.02 100); /* surfaces/popouts (near white) */
-  --color-surfaceColor: oklch(0.95 0.02 250); /* app background */
-
-  /* Primary (Indigo) */
-  --color-primaryColor: oklch(0.6 0.2 278); /* base */
-  --color-primaryColor-light: oklch(0.76 0.18 278); /* hover */
-  --color-primaryColor-dark: oklch(0.48 0.21 278); /* active/focus */
-
-  /* Secondary (Amber) */
-  --color-secondaryColor: oklch(0.78 0.18 70); /* accent */
-  --color-secondaryColor-bright: oklch(0.86 0.16 70); /* highlight */
-
-  /* Tertiary (Rose) */
-  --color-thirdColor: oklch(0.65 0.15 20);
-  --color-thirdColorBright: oklch(0.74 0.18 20);
-
-  /* Typography */
-  --color-fonts: oklch(0.24 0.02 260);
-  --color-headingFonts: oklch(0.2 0.03 260);
-  --font-inter: "Inter";
-}
-
-body {
-  font-family: Inter;
+  /* --- BARVNA PALETA (Indigo & Amber Dark Mode) --- */
   
+  /* Ozadja */
+  --color-background: oklch(0.12 0.02 270);    /* Zelo temna indigo/siva (Glavno ozadje) */
+  --color-surface: oklch(0.18 0.03 270);       /* Svetlejša siva (Kartice, Forme) */
+  --color-surface-highlight: oklch(0.25 0.04 270); /* Hover efekt */
+
+  /* Glavna barva (Indigo/Purple) */
+  --color-primary: oklch(0.6 0.2 278); 
+  --color-primary-hover: oklch(0.5 0.2 278);
+
+  /* Poudarki (Amber/Orange) - Za gumbe, cene, akcije */
+  --color-secondary: oklch(0.78 0.18 70);
+  --color-secondary-hover: oklch(0.85 0.18 70);
+
+  /* Tekst */
+  --color-text-main: oklch(0.98 0.00 0);       /* Bela */
+  --color-text-muted: oklch(0.70 0.01 270);    /* Siva */
+
+  /* Font */
+  --font-inter: "Inter", sans-serif;
 }
 
-.nav-row {
-  @apply flex justify-center items-center flex-col gap-2;
-}
-.nav-row-second {
-  @apply border border-black
-        shadow-xl shadow-secondaryColor/15
-        text-buttonBg/90
-      bg-bgSecond rounded-xl p-3 flex justify-center items-center flex-col px-10
-      hover:translate-y-[-8px] hover:scale-110 transition-all duration-200 
-      hover:bg-primaryColor-light
-      hover:shadow-secondaryColor/30;
+/* --- GLOBALNI STILI --- */
+body {
+  font-family: var(--font-inter);
+  background-color: var(--color-background);
+  color: var(--color-text-main);
+  -webkit-font-smoothing: antialiased;
 }
 
-.login-form-style {
-  @apply flex-col flex items-center justify-center rounded-2xl
-      border border-black
-        shadow-2xl shadow-secondaryColor/30
-      bg-thirdColor;
+
+/* --- TAILWIND COMPONENTS --- */
+@layer components {
+  /* To nadomesti tisti inline stil v SellPage */
+  .input-field {
+    @apply w-full bg-background border border-white/10 rounded-xl px-4 py-3 text-white 
+           placeholder:text-white/20 outline-none 
+           focus:border-primary focus:ring-1 focus:ring-primary transition-all
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
 }
 
-.input-theme-one {
-  @apply rounded-lg px-4 py-3 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-thirdColor
-  text-white;
-}
 
-.btn {
-  @apply rounded-xl px-4 py-3 focus:ring-2 focus:ring-primaryColor-dark 
-   text-sm text-white 
-   placeholder-transparent
-            transition-all duration-200
-            bg-primaryColor border-2 border-black/10 shadow-xl shadow-secondaryColor/30 focus:outline-none hover:bg-primaryColor-light active:bg-primaryColor-dark hover:translate-y-[-1px];
-}
 
-.btn-secondary {
-  @apply justify-center px-4 py-3 items-center flex rounded-lg  focus:outline-none focus:ring-2 focus:ring-primaryColor-dark text-sm
-            transition-all duration-200
-           border-2 border-primaryColor text-primaryColor bg-transparent hover:bg-primaryColor/10 shadow-md shadow-secondaryColor/20;
-}
-
-.dropdown-menu {
-  @apply bg-primaryColor-light text-white;
-}
-
-.container {
-  @apply flex flex-col;
-}
-
-.select {
-  @apply bg-primaryColor/40 rounded-lg w-full h-full text-white outline-none focus:ring-2 focus:ring-primaryColor-dark hover:bg-primaryColor/50 transition-colors duration-200;
-}
-
-.tableHeadBox {
-  @apply px-4 py-2 border border-gray-700 text-left bg-primaryColor-dark/20 text-white;
-}
-
-.tableRowBox {
-  @apply px-4 py-2 border border-gray-700 hover:bg-primaryColor/10 transition-colors duration-150;
-}
-
-/* uploader */
-.uploader-drop {
-  @apply border-2 border-dashed border-primaryColor/50 rounded-xl bg-buttonBg/60 p-6 flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors duration-200 hover:bg-buttonBg/70;
-}
-.uploader-drop--active {
-  @apply border-primaryColor bg-buttonBg/80;
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-white/5 rounded-r-xl;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-white/10 rounded-full hover:bg-primary/50 transition-colors;
+  }
 }

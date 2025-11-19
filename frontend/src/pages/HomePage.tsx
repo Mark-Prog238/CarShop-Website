@@ -4,11 +4,14 @@ import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
 import { motion } from "framer-motion";
-import { Car, Tags, DollarSign } from "lucide-react";
+import { Car, Tags, DollarSign, ShieldCheck, Zap, Search, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import API, { fetchListings } from "../components/api";
 import { ListingCard } from "../components/ListingCard";
+import { Link, useNavigate } from "react-router"; // Ali "next/link" / "next/navigation" če si na Next.js
+
 export const HomePage = () => {
+  const navigate = useNavigate(); // Za preusmeritev pri iskanju
   const [makes, setMakes] = useState<{ id: number; name: string }[]>([]);
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
@@ -17,14 +20,20 @@ export const HomePage = () => {
   const [maxPrice, setMaxPrice] = useState("");
   const [featured, setFeatured] = useState<any[]>([]);
 
+  // Fetch Makes
   useEffect(() => {
     (async () => {
-      const r = await fetch(`${API.BASE_URL}/api/cars/makes`);
-      const j = await r.json();
-      setMakes(j.data || []);
+      try {
+        const r = await fetch(`${API.BASE_URL}/api/cars/makes`);
+        const j = await r.json();
+        setMakes(j.data || []);
+      } catch (e) {
+        console.error("Failed to fetch makes", e);
+      }
     })();
   }, []);
 
+  // Fetch Models when Make changes
   useEffect(() => {
     if (!make) {
       setModels([]);
@@ -32,195 +41,190 @@ export const HomePage = () => {
       return;
     }
     (async () => {
-      const r = await fetch(`${API.BASE_URL}/api/cars/models/${make}`);
-      const j = await r.json();
-      setModels(j.data || []);
+      try {
+        const r = await fetch(`${API.BASE_URL}/api/cars/models/${make}`);
+        const j = await r.json();
+        setModels(j.data || []);
+      } catch (e) {
+        console.error("Failed to fetch models", e);
+      }
     })();
   }, [make]);
 
+  // Fetch Featured Listings
   useEffect(() => {
     (async () => {
       try {
         const res = await fetchListings();
-        const items = (res.data || []).slice(0, 9);
+        const items = (res.data || []).slice(0, 3); // Pokaži samo top 3
         setFeatured(items);
       } catch {}
     })();
   }, []);
 
+  const handleSearch = () => {
+    // Sestavi URL za iskanje
+    const query = new URLSearchParams();
+    if (make) query.set("make", make);
+    if (model) query.set("model", model);
+    if (minPrice) query.set("minPrice", minPrice);
+    if (maxPrice) query.set("maxPrice", maxPrice);
+    
+    navigate(`/listings?${query.toString()}`);
+  };
+
   return (
-    <div>
+    <div className="min-h-screen bg-[#0f111a] text-white font-sans flex flex-col">
       <NavbarSecond />
-      {/* HERO */}
-      <section className="relative grid place-items-center">
-        <div className="absolute inset-0 -z-10">
+
+      {/* --- HERO SECTION --- */}
+      <section className="relative h-[85vh] w-full flex items-center justify-center overflow-hidden">
+        {/* Background Image with Dark Overlay */}
+        <div className="absolute inset-0 z-0">
           <img
-            src="https://images.pexels.com/photos/305070/pexels-photo-305070.jpeg"
-            alt="Car background"
-            className="h-[85vh] w-full object-cover blur-[1px]"
+            src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=1920&auto=format&fit=crop"
+            alt="Luxury Car"
+            className="h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-black/50" />
+          {/* Gradient Overlay: Black at bottom, transparent at top */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#0f111a]" />
         </div>
 
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
+        {/* Content */}
+        <div className="relative z-10 w-full max-w-6xl px-4 flex flex-col items-center text-center">
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center"
+            transition={{ duration: 0.6 }}
+            className="text-5xl md:text-7xl font-extrabold tracking-tight text-white mb-6"
           >
-            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-white">
-              Find your perfect car
-            </h1>
-            <p className="mt-3 md:mt-4 text-white/90 text-base md:text-lg">
-              Thousands of new and used cars at your fingertips
-            </p>
-          </motion.div>
+            Drive Your <span className="text-blue-500">Dream</span>
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="text-lg md:text-xl text-gray-300 mb-10 max-w-2xl"
+          >
+            The premium marketplace for buying and selling vehicles. 
+            Verified dealers, transparent pricing, instant listings.
+          </motion.p>
 
-          {/* Glass search card */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mt-8 md:mt-10 rounded-2xl border border-white/20 bg-white/15 backdrop-blur-xl shadow-2xl"
+          {/* --- SEARCH BOX (Floating Card) --- */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="w-full bg-[#181a25]/90 backdrop-blur-md border border-white/10 p-6 rounded-2xl shadow-2xl"
           >
-            <div className="grid gap-3 sm:grid-cols-4 p-4 md:p-6">
-              <div>
-                <label className="flex items-center gap-2 text-sm text-white/85 pb-1">
-                  <Car size={16} /> Make
-                </label>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              
+              {/* Make Select */}
+              <div className="space-y-1 text-left">
+                <label className="text-xs font-medium text-gray-400 ml-1">Make</label>
                 <Select
                   value={make}
-                  onChange={(e) => setMake(e.target.value)}
-                  className="bg-white "
+                  onChange={(e: any) => setMake(e.target.value)}
+                  className="bg-[#0f111a] border-white/10 text-white h-12"
                 >
-                  <option value="">Any</option>
+                  <option value="">All Makes</option>
                   {makes.map((m) => (
-                    <option key={m.id} value={m.name}>
-                      {m.name}
-                    </option>
+                    <option key={m.id} value={m.name} className="text-black">{m.name}</option>
                   ))}
                 </Select>
               </div>
-              <div>
-                <label className="flex items-center gap-2 text-sm text-white/85 pb-1">
-                  <Tags size={16} /> Model
-                </label>
+
+              {/* Model Select */}
+              <div className="space-y-1 text-left">
+                <label className="text-xs font-medium text-gray-400 ml-1">Model</label>
                 <Select
                   value={model}
-                  onChange={(e) => setModel(e.target.value)}
+                  onChange={(e: any) => setModel(e.target.value)}
                   disabled={!make}
-                  className="bg-white "
+                  className="bg-[#0f111a] border-white/10 text-white h-12 disabled:opacity-50"
                 >
-                  <option value="">Any</option>
+                  <option value="">All Models</option>
                   {models.map((m) => (
-                    <option key={m.id} value={m.name}>
-                      {m.name}
-                    </option>
+                    <option key={m.id} value={m.name} className="text-black">{m.name}</option>
                   ))}
                 </Select>
               </div>
-              <div>
-                <label className="flex items-center gap-2 text-sm text-white/85 pb-1">
-                  <DollarSign size={16} /> Min Price
-                </label>
-                <Input
-                  value={minPrice}
-                  onChange={(e) => setMinPrice(e.target.value)}
-                  placeholder="Min €"
-                  className="bg-white text-black placeholder:text-black/50"
-                />
+
+              {/* Price Range */}
+              <div className="space-y-1 text-left">
+                <label className="text-xs font-medium text-gray-400 ml-1">Price Range (€)</label>
+                <div className="flex gap-2">
+                  <Input
+                    value={minPrice}
+                    onChange={(e: any) => setMinPrice(e.target.value)}
+                    placeholder="Min"
+                    type="number"
+                    className="bg-[#0f111a] border-white/10 text-white h-12 placeholder:text-gray-600"
+                  />
+                  <Input
+                    value={maxPrice}
+                    onChange={(e: any) => setMaxPrice(e.target.value)}
+                    placeholder="Max"
+                    type="number"
+                    className="bg-[#0f111a] border-white/10 text-white h-12 placeholder:text-gray-600"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="flex items-center gap-2 text-sm text-white/85 pb-1">
-                  <DollarSign size={16} /> Max Price
-                </label>
-                <Input
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(e.target.value)}
-                  placeholder="Max €"
-                  className="bg-white text-black placeholder:text-black/50"
-                />
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row items-center gap-3 p-4 md:px-6 md:pb-6">
-              <a
-                className="w-full sm:w-auto"
-                href={`/listings?make=${encodeURIComponent(
-                  make
-                )}&model=${encodeURIComponent(
-                  model
-                )}&minPrice=${minPrice}&maxPrice=${maxPrice}`}
-              >
-                <Button className="w-full sm:w-auto">Search cars</Button>
-              </a>
-              <a href="/sell" className="w-full sm:w-auto">
-                <Button variant="secondary" className="w-full sm:w-auto">
-                  Sell your car
+
+              {/* Search Button */}
+              <div className="flex items-end">
+                <Button 
+                  onClick={handleSearch}
+                  className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg shadow-lg shadow-blue-900/20"
+                >
+                  <Search className="mr-2" size={20} /> Search
                 </Button>
-              </a>
+              </div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* FEATURED */}
-      <section className="bg-surfaceColor">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <h2 className="text-2xl md:text-3xl font-bold text-black pb-8 text-center md:text-left">
-            Why CarShop
-          </h2>
-          <div className="grid gap-6 md:grid-cols-3">
+      {/* --- FEATURES / WHY US --- */}
+      <section className="bg-[#0f111a] py-20 border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-12">Why Choose CarShop?</h2>
+          <div className="grid md:grid-cols-3 gap-8">
             {[
-              {
-                title: "Verified sellers",
-                desc: "Every dealer is checked and rated.",
-                icon: <Car className="text-primaryColor" />,
-              },
-              {
-                title: "Free listings",
-                desc: "Create a listing in under 3 minutes.",
-                icon: <Tags className="text-primaryColor" />,
-              },
-              {
-                title: "Secure payments",
-                desc: "We keep your data safe.",
-                icon: <DollarSign className="text-primaryColor" />,
-              },
-            ].map((f, i) => (
-              <motion.div
-                key={i}
-                whileHover={{ y: -4 }}
-                className="rounded-xl bg-white text-black p-6 shadow-md border border-black/10"
-              >
-                <div className="flex items-center gap-3">
-                  {f.icon}
-                  <h3 className="text-lg font-semibold">{f.title}</h3>
-                </div>
-                <p className="mt-2 text-black/70 text-sm">{f.desc}</p>
-              </motion.div>
+              { icon: <ShieldCheck size={40} className="text-green-500" />, title: "Verified Dealers", text: "Every seller is vetted to ensure safety and trust." },
+              { icon: <Zap size={40} className="text-yellow-500" />, title: "Fast Listings", text: "List your car in under 3 minutes with our smart tools." },
+              { icon: <DollarSign size={40} className="text-blue-500" />, title: "Transparent Pricing", text: "No hidden fees. What you see is what you get." },
+            ].map((item, i) => (
+              <div key={i} className="p-6 bg-[#181a25] rounded-xl border border-white/5 hover:-translate-y-2 transition-transform duration-300">
+                <div className="mb-4 flex justify-center">{item.icon}</div>
+                <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+                <p className="text-gray-400">{item.text}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FEATURED LISTINGS */}
-      <section className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="flex items-center justify-between pb-4">
-            <h2 className="text-2xl md:text-3xl font-bold text-black">
-              Featured listings
-            </h2>
-            <a href="/listings" className="text-primaryColor font-semibold">
-              View all
-            </a>
+      {/* --- FEATURED LISTINGS --- */}
+      <section className="py-20 bg-[#0f111a]">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex justify-between items-end mb-10">
+            <div>
+              <h2 className="text-3xl font-bold mb-2">Latest Arrivals</h2>
+              <p className="text-gray-400">Check out the freshest cars on the market.</p>
+            </div>
+            <Link to="/listings" className="text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 group">
+              View Inventory <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform"/>
+            </Link>
           </div>
+
           {featured.length === 0 ? (
-            <p className="text-black/60">
-              No listings yet. Be the first to post.
-            </p>
+             <div className="text-center py-12 bg-[#181a25] rounded-xl border border-white/10">
+                <p className="text-gray-500">Loading listings...</p>
+             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {featured.map((l) => (
                 <ListingCard key={l._id} listing={l} />
               ))}
@@ -229,76 +233,17 @@ export const HomePage = () => {
         </div>
       </section>
 
-      {/* BRANDS STRIP */}
-      <section className="bg-surfaceColor">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <h3 className="text-xl font-bold text-black pb-4">Popular brands</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-            {[
-              "Audi",
-              "BMW",
-              "Mercedes-Benz",
-              "Volkswagen",
-              "Toyota",
-              "Honda",
-            ].map((b) => (
-              <div
-                key={b}
-                className="rounded-lg border border-black/10 bg-white px-4 py-3 text-center text-black/80 hover:shadow-md transition-shadow"
-              >
-                <button onClick={() => {}}>{b}</button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* TESTIMONIALS */}
-      <section className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <h3 className="text-xl font-bold text-black pb-6">
-            What drivers say
-          </h3>
-          <div className="grid gap-6 md:grid-cols-3">
-            {[
-              {
-                name: "Luka",
-                text: "Listed my car in minutes and sold within a week.",
-              },
-              {
-                name: "Ana",
-                text: "Search was fast and the details page was super clear.",
-              },
-              {
-                name: "Maja",
-                text: "Loved the simple pricing and quick upload process.",
-              },
-            ].map((t, i) => (
-              <motion.div
-                key={i}
-                whileHover={{ y: -3 }}
-                className="rounded-xl bg-surfaceColor p-6 border border-black/10"
-              >
-                <p className="text-black/80">“{t.text}”</p>
-                <p className="pt-3 font-semibold">{t.name}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA BANNER */}
-      <section className="bg-primaryColor">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-          <h3 className="text-2xl md:text-3xl font-extrabold text-white">
-            Ready to sell?
-          </h3>
-          <p className="text-white/90 pt-2">
-            Create your listing in under 3 minutes.
-          </p>
-          <a href="/sell" className="inline-block mt-4">
-            <Button className="px-6">Sell your car</Button>
-          </a>
+      {/* --- CTA SECTION --- */}
+      <section className="py-24 bg-gradient-to-r from-blue-900 to-[#0f111a] relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+        <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
+          <h2 className="text-4xl font-bold mb-6">Ready to Sell Your Car?</h2>
+          <p className="text-xl text-blue-100 mb-8">Join thousands of satisfied sellers. Get the best price for your vehicle today.</p>
+          <Link to="/sell">
+            <Button className="bg-white text-blue-900 hover:bg-gray-100 font-bold text-lg px-10 py-6 rounded-full shadow-xl">
+              List Your Car for Free
+            </Button>
+          </Link>
         </div>
       </section>
 

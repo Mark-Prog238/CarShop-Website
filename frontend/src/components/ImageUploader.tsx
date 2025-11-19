@@ -1,81 +1,90 @@
-import { useCallback, useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
+import type { ChangeEvent } from "react";
+import { Upload, X, Image as ImageIcon } from "lucide-react";
 
 interface ImageUploaderProps {
   files: File[];
   onChange: (files: File[]) => void;
-  maxFiles?: number;
-  maxSizeMb?: number;
 }
 
-export const ImageUploader = ({ files, onChange, maxFiles = 8, maxSizeMb = 8 }: ImageUploaderProps) => {
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const [dragOver, setDragOver] = useState(false);
-  const [previews, setPreviews] = useState<string[]>([]);
-  const maxSizeBytes = maxSizeMb * 1024 * 1024;
+export const ImageUploader = ({ files, onChange }: ImageUploaderProps) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
-  useEffect(() => {
-    // generate preview urls
-    const urls = files.map((f) => URL.createObjectURL(f));
-    setPreviews(urls);
-    return () => urls.forEach((u) => URL.revokeObjectURL(u));
-  }, [files]);
-
-  const validateFiles = (incoming: File[]): File[] => {
-    const acceptedTypes = ["image/jpeg", "image/png", "image/webp"];
-    const filtered = incoming.filter((f) => acceptedTypes.includes(f.type) && f.size <= maxSizeBytes);
-    const total = [...files, ...filtered].slice(0, maxFiles);
-    return total;
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      onChange([...files, ...newFiles]);
+    }
   };
 
-  const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const list = Array.from(e.target.files || []);
-    onChange(validateFiles(list));
+  // Trigger file dialog
+  const handleClick = () => {
+    inputRef.current?.click();
   };
 
-  const onDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setDragOver(false);
-    const list = Array.from(e.dataTransfer.files || []);
-    onChange(validateFiles(list));
-  }, [files]);
-
-  const removeAt = (idx: number) => {
-    const next = files.filter((_, i) => i !== idx);
-    onChange(next);
+  const removeFile = (index: number) => {
+    const newFiles = files.filter((_, i) => i !== index);
+    onChange(newFiles);
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="w-full space-y-4">
+      {/* Hidden Input - accepts images and camera on mobile */}
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        accept="image/*" // To omogoči kamero na mobitelu
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      {/* Drop Zone */}
       <div
-        className={`uploader-drop ${dragOver ? "uploader-drop--active" : ""}`}
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={onDrop}
-        onClick={() => inputRef.current?.click()}
+        onClick={handleClick}
+        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+        onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setIsDragging(false);
+          if (e.dataTransfer.files?.length) {
+            const newFiles = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
+            onChange([...files, ...newFiles]);
+          }
+        }}
+        className={`
+          relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all duration-200
+          ${isDragging ? "border-primary bg-primary/10" : "border-white/20 bg-white/5 hover:bg-white/10 hover:border-primary/50"}
+        `}
       >
-        <p className="text-white text-sm">Drag & drop images here, or click to browse</p>
-        <p className="text-white/60 text-xs">PNG, JPG, WEBP — up to {maxFiles} images, {maxSizeMb}MB each</p>
-        <input
-          ref={inputRef}
-          type="file"
-          multiple
-          accept="image/png,image/jpeg,image/webp"
-          onChange={onPick}
-          className="hidden"
-        />
+        <div className="p-4 bg-background rounded-full mb-3 border border-white/10">
+          <Upload size={24} className="text-primary" />
+        </div>
+        <p className="text-sm font-bold text-white">
+          Click to upload photos
+        </p>
+        <p className="text-xs text-text-muted mt-1">
+          or drag and drop here
+        </p>
       </div>
 
-      {previews.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {previews.map((src, i) => (
-            <div key={`${src}-${i}`} className="relative group">
-              <img src={src} className="w-full h-28 object-cover rounded-md border border-black/20" />
+      {/* Previews */}
+      {files.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {files.map((file, index) => (
+            <div key={index} className="relative aspect-video rounded-lg overflow-hidden border border-white/10 group bg-black">
+              <img
+                src={URL.createObjectURL(file)}
+                alt="preview"
+                className="w-full h-full object-cover"
+              />
               <button
                 type="button"
-                className="absolute top-1 right-1 px-2 py-1 text-xs rounded bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => removeAt(i)}
+                onClick={(e) => { e.stopPropagation(); removeFile(index); }}
+                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-600 transition-colors"
               >
-                Remove
+                <X size={14} />
               </button>
             </div>
           ))}
@@ -84,5 +93,3 @@ export const ImageUploader = ({ files, onChange, maxFiles = 8, maxSizeMb = 8 }: 
     </div>
   );
 };
-
-

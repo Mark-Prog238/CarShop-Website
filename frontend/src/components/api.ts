@@ -1,15 +1,14 @@
 const API = {
-  BASE_URL: "http://localhost:8000", // use http unless you configured https
+  BASE_URL: "http://localhost:8000", // <--- TO JE NUJNO!
   ENDPOINTS: {
     LOGIN: "/api/login",
     REGISTER: "/api/register",
     LISTINGS: {
       CREATE: "/api/listings",
-      UPLOAD: "/api/uploads", // optional separate upload route if backend supports
     },
   },
 };
-
+// ... ostalo pusti enako
 export const fetchListings = async () => {
   try {
     const res = await fetch(`${API.BASE_URL}${API.ENDPOINTS.LISTINGS.CREATE}`);
@@ -25,6 +24,6 @@ export const fetchListings = async () => {
 };
 
 export const fetchListingById = async (id: string) =>
-  fetch(`${API.BASE_URL}/api/listings/${id}`).then((r) => r.json());
+  fetch(`${API.BASE_URL}/api/listing/${id}`).then((r) => r.json());
 
 export default API;

@@ -1,11 +1,11 @@
 import express, { response } from "express";
 import cors from "cors";
-import { connectDB } from "./db/connect.js";
+import { connectDB } from "./connect.js";
 import bcrypt from "bcrypt";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { getCache, setCache } from "./utils/cache.js";
+const PORT = process.env.PORT || 8000;
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -87,12 +87,8 @@ app.post("/api/register", async (req, res) => {
 
 // za aute
 
-// Cars data proxy with cache + fallback
 app.get("/api/cars/makes", async (_req, res) => {
   try {
-    const cached = getCache("car_makes");
-    if (cached) return res.json({ data: cached });
-
     let data;
     try {
       const resp = await fetch("https://carapi.app/api/makes/v2", {
@@ -104,7 +100,6 @@ app.get("/api/cars/makes", async (_req, res) => {
     } catch {
       data = [];
     }
-    setCache("car_makes", data, 24 * 60 * 60 * 1000);
     res.json({ data });
   } catch (e) {
     res.status(200).json({ data: [] });
@@ -115,8 +110,6 @@ app.get("/api/cars/models/:make", async (req, res) => {
   const { make } = req.params;
   const key = `car_models_${make}`;
   try {
-    const cached = getCache(key);
-    if (cached) return res.json({ data: cached });
 
     let data;
     try {
@@ -131,7 +124,6 @@ app.get("/api/cars/models/:make", async (req, res) => {
       const arr = [];
       data = arr.map((name, idx) => ({ id: idx + 1, name }));
     }
-    setCache(key, data, 24 * 60 * 60 * 1000);
     res.json({ data });
   } catch (e) {
     const arr = [];
@@ -141,45 +133,96 @@ app.get("/api/cars/models/:make", async (req, res) => {
   }
 });
 
-// Listings API
-app.post("/api/listings", upload.any(), async (req, res) => {
-  try {
-    const { brand, model, year, milage, hp, price } = req.body;
-    const imageFiles = (req.files || []).filter((f) =>
-      f.mimetype.startsWith("image/")
-    );
-    const imageUrls = imageFiles.map(
-      (f) => `/uploads/${path.basename(f.path)}`
-    );
 
-    const listing = {
+
+
+
+// 3. CREATE LISTING (POSODOBLJENO: Vključuje features, doors, seats, driveType...)
+app.post("/api/listings", upload.array("images"), async (req, res) => {
+  try {
+    console.log("📥 Prejemam podatke:", req.body);
+
+    // 1. Preberemo VSE podatke iz requesta
+    const { 
+      brand, model, price, year, milage, hp, description,
+      bodyType, fuelType, gearbox, vin,
+      // NOVE SPREMENLJIVKE:
+      driveType, doors, seats, euroStandard, features 
+    } = req.body;
+    
+    const imageUrls = req.files.map(file => `http://localhost:${PORT}/uploads/${file.filename}`);
+
+    // Izračun kW
+    const calculatedKw = hp ? Math.round(Number(hp) * 0.7457) : undefined;
+
+    // PARSANJE FEATURE-jev
+    // FormData pošlje array kot string, zato ga moramo pretvoriti nazaj v Array
+    let parsedFeatures = [];
+    if (features) {
+        try {
+            parsedFeatures = JSON.parse(features);
+        } catch (e) {
+            console.log("Napaka pri branju features JSON:", e);
+        }
+    }
+
+    const newListing = {
       brand,
       model,
-      year: year ? Number(year) : undefined,
-      milage: milage ? Number(milage) : undefined,
-      hp: hp ? Number(hp) : undefined,
-      price: price ? Number(price) : undefined,
+      price: Number(price),
+      year: Number(year),
+      milage: Number(milage),
+      hp: Number(hp),
+      kW: calculatedKw,
+      
+      // Osnovni podatki
+      bodyType: bodyType || "Other",
+      fuelType: fuelType || "Other",
+      gearbox: gearbox || "Manual",
+      vin: vin || "",
+      description: description || "",
+      
+      // NOVI PODATKI V BAZI:
+      driveType: driveType || "FWD",
+      doors: Number(doors) || 5,
+      seats: Number(seats) || 5,
+      euroStandard: euroStandard || "Euro 6",
+      features: parsedFeatures, // Shrani se kot ["ABS", "Navigation", ...]
+      
       images: imageUrls,
       createdAt: new Date(),
+      status: "active"
     };
 
-    const result = await listings.insertOne(listing);
-    return res
-      .status(201)
-      .json({ success: true, id: result.insertedId, listing });
-  } catch (error) {
-    console.error("❌ listing create error:", error);
+    const result = await db.collection("listings").insertOne(newListing);
+    console.log("✅ Uspešno shranjeno z ID:", result.insertedId);
+    
+    res.status(201).json({ success: true, id: result.insertedId });
+  } catch (e) {
+    console.error("❌ Upload Error:", e);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
+
+
+
+
+
+
+
+
+
+
 
 app.get("/api/listings", async (_req, res) => {
   const all = await listings.find({}).sort({ createdAt: -1 }).toArray();
   res.json({ success: true, data: all });
 });
 
-app.get("/api/listings/:id", async (req, res) => {
+app.get("/api/listing/:id", async (req, res) => {
   try {
+    console.log("Fetching listing with id:", req.params.id);
     const { id } = req.params;
     const doc = await listings.findOne({
       _id: new (await import("mongodb")).ObjectId(id),
@@ -189,7 +232,8 @@ app.get("/api/listings/:id", async (req, res) => {
     res.json({ success: true, data: doc });
   } catch (e) {
     res.status(400).json({ success: false, message: "Invalid id" });
+    console.log("❌ listing fetch error:");
   }
 });
 
-app.listen(8000, () => console.log("server running on http://localhost:8000"));
+app.listen(PORT, () => console.log("server running on http://localhost:8000"));
