@@ -50,7 +50,7 @@ let db;
 async function startServer() {
   try {
     await client.connect();
-    db = client.db("carshop");
+    db = client.db("avtoDB");
     console.log("✅ Povezan z MongoDB");
     
     app.listen(PORT, () => {
