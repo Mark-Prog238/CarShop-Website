@@ -108,7 +108,7 @@ export const ListingsPage = () => {
         <div className="grid gap-8 lg:grid-cols-[300px_1fr]">
           
           {/* --- SIDEBAR (FILTERS) --- */}
-          <aside className="h-fit rounded-xl bg-surface p-6 shadow-xl border border-white/10 sticky top-20">
+          <aside className="h-fit rounded-xl bg-surface p-6 shadow-xl border border-white/10 lg:sticky lg:top-20">
             <h2 className="font-bold text-white mb-4 flex items-center gap-2">
                 <Search size={18} className="text-primary"/> Refine Search
             </h2>

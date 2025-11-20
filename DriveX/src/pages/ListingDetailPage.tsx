@@ -253,7 +253,7 @@ export const ListingDetailPage = () => {
           <div className="space-y-6">
             
             {/* SELLER & ACTIONS CARD */}
-            <div className="bg-surface p-6 rounded-2xl border border-white/10 shadow-xl sticky top-24">
+            <div className="bg-surface p-6 rounded-2xl border border-white/10 shadow-xl lg:sticky lg:top-24">
               <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white/10">
                 <div className="w-14 h-14 bg-gradient-to-br from-primary to-purple-900 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg">
                   {listing.sellerId ? listing.sellerId[0].toUpperCase() : "S"}
