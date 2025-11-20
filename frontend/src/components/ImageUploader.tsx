@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import type { ChangeEvent } from "react";
-import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { Upload, X } from "lucide-react";
 
 interface ImageUploaderProps {
   files: File[];
@@ -18,7 +18,6 @@ export const ImageUploader = ({ files, onChange }: ImageUploaderProps) => {
     }
   };
 
-  // Trigger file dialog
   const handleClick = () => {
     inputRef.current?.click();
   };
@@ -30,17 +29,15 @@ export const ImageUploader = ({ files, onChange }: ImageUploaderProps) => {
 
   return (
     <div className="w-full space-y-4">
-      {/* Hidden Input - accepts images and camera on mobile */}
       <input
         ref={inputRef}
         type="file"
         multiple
-        accept="image/*" // To omogoči kamero na mobitelu
+        accept="image/*"
         className="hidden"
         onChange={handleFileChange}
       />
 
-      {/* Drop Zone */}
       <div
         onClick={handleClick}
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
@@ -69,7 +66,6 @@ export const ImageUploader = ({ files, onChange }: ImageUploaderProps) => {
         </p>
       </div>
 
-      {/* Previews */}
       {files.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {files.map((file, index) => (

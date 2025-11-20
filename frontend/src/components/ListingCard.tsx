@@ -1,8 +1,6 @@
 import { Link } from "react-router-dom";
-import { MapPin, Fuel, Settings2, Gauge } from "lucide-react";
-
-// Uporabi BASE_URL iz api.ts za slike
-const BACKEND_BASE_URL = "http://localhost:8000"; 
+import {Fuel, Settings2 } from "lucide-react";
+import API from "./api";
 
 // TIP: Minimalna definicija tipa, da TS ve, kaj delamo
 type Listing = {
@@ -26,7 +24,7 @@ export const ListingCard = ({ listing }: { listing: Listing }) => {
   const idStr = typeof listing._id === "string" ? listing._id : listing._id?.$oid || "";
 
   // Sestavljanje URL-ja slike (dodamo base URL backenda, če je slika lokalna)
-  const imageUrl = image?.startsWith("http") ? image : `${BACKEND_BASE_URL}${image}`;
+  const imageUrl = image?.startsWith("http") ? image : `${API.BASE_URL}${image}`;
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-DE', { style: 'currency', currency: 'EUR' }).format(value);

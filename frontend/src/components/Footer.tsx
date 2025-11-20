@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { Logo } from "./Logo";
-import { Facebook, Instagram, Twitter, Youtube } from "lucide-react"; // Opcijsko: ikone za socialna omrežja
+import { Facebook, Instagram, Twitter } from "lucide-react"; 
 
 export const Footer = () => {
   return (

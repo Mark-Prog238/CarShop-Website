@@ -6,6 +6,7 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import { ListingsPage } from "./pages/ListingsPage";
 import { ListingDetailPage } from "./pages/ListingDetailPage";
 import { MyGaragePage } from "./pages/MyGaragePage";
+import { SavedPage } from "./pages/SavedPage";
 function App() {
   return (
     <BrowserRouter>
@@ -17,6 +18,7 @@ function App() {
         <Route path="/listings" element={<ListingsPage />} />
         <Route path="/listing/:id" element={<ListingDetailPage />} />
         <Route path="/garage" element={<MyGaragePage />} />
+        <Route path="/saved" element={<SavedPage />} />
       </Routes>
     </BrowserRouter>
   );

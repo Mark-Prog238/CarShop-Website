@@ -57,7 +57,6 @@ export const RegisterPage = () => {
             const data = await response.json();
 
             if (data.success) {
-                // Po uspešnem setupu, preusmeri na login, da se lahko prijavijo
                 navigate("/login"); 
             } else {
                 setFormError(data.message || "Registration failed. Try a different email.");

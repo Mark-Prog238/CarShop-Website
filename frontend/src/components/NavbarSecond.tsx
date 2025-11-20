@@ -59,6 +59,11 @@ export const NavbarSecond = () => {
               Garage
             </Link>
           </li>
+          <li>
+              <Link to="/saved" className="block rounded-lg px-4 py-3 text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white" onClick={() => setOpen(false)}>
+                Saved
+              </Link>
+          </li>
         </ul>
 
         {/* --- DESKTOP ACTIONS (LOGIN/LOGOUT/SELL) --- */}
@@ -107,6 +112,9 @@ export const NavbarSecond = () => {
             <li>
               <Link to="/listings" className="block rounded-lg px-4 py-3 text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white" onClick={() => setOpen(false)}>
                 Inventory
+              </Link>
+              <Link to="/saved" className="block rounded-lg px-4 py-3 text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white" onClick={() => setOpen(false)}>
+                Saved
               </Link>
             </li>
             <li>

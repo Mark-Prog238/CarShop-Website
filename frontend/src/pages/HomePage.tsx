@@ -4,7 +4,7 @@ import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
 import { motion } from "framer-motion";
-import { Car, Tags, DollarSign, ShieldCheck, Zap, Search, ArrowRight } from "lucide-react";
+import { DollarSign, ShieldCheck, Zap, Search, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import API, { fetchListings } from "../components/api";
 import { ListingCard } from "../components/ListingCard";
@@ -86,7 +86,7 @@ export const HomePage = () => {
             className="h-full w-full object-cover"
           />
           {/* Gradient Overlay: Black at bottom, transparent at top */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#0f111a]" />
+          <div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/40 to-[#0f111a]" />
         </div>
 
         {/* Content */}
@@ -129,7 +129,7 @@ export const HomePage = () => {
                 >
                   <option value="">All Makes</option>
                   {makes.map((m) => (
-                    <option key={m.id} value={m.name} className="text-black">{m.name}</option>
+                    <option key={m.id} value={m.name} className="text-white">{m.name}</option>
                   ))}
                 </Select>
               </div>
@@ -145,7 +145,7 @@ export const HomePage = () => {
                 >
                   <option value="">All Models</option>
                   {models.map((m) => (
-                    <option key={m.id} value={m.name} className="text-black">{m.name}</option>
+                    <option key={m.id} value={m.name} className="text-white">{m.name}</option>
                   ))}
                 </Select>
               </div>
@@ -233,7 +233,7 @@ export const HomePage = () => {
       </section>
 
       {/* --- CTA SECTION --- */}
-      <section className="py-24 bg-gradient-to-r from-blue-900 to-[#0f111a] relative overflow-hidden">
+      <section className="py-24 bg-linear-to-r from-blue-900 to-[#0f111a] relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
         <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
           <h2 className="text-4xl font-bold mb-6">Ready to Sell Your Car?</h2>

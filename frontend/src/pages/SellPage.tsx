@@ -1,49 +1,37 @@
-import { useState, useEffect, type FormEvent, type KeyboardEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { NavbarSecond } from "../components/NavbarSecond";
 import { ImageUploader } from "../components/ImageUploader";
-import API from "../components/api";
+import API, { fetchListingById } from "../components/api";
 import { 
-  ChevronRight, ChevronLeft, CheckCircle, MapPin, Calendar, Gauge, 
-  Settings2, Fuel, Info, Edit2, Car, ShieldCheck, Zap, Plus, X, Lock, 
-  Users, DoorClosed, ArrowRight, UserCheck
+  ChevronRight, ChevronLeft, CheckCircle, Plus, X,
+  Loader2
 } from "lucide-react";
 
-// Tipi podatkov in konstante
 type CarMake = { id: number; name: string };
 type CarModel = { id: number; name: string };
-
 const BODY_TYPES = ["Sedan", "Hatchback", "SUV", "Wagon", "Coupe", "Convertible", "Van", "Pickup", "Minivan", "Cabriolet"];
-
-const EXTENSIVE_FEATURES = [
-  "ABS", "Adaptive Cruise Control", "Lane Assist", "Blind Spot Monitor", "Traffic Sign Recognition",
-  "Webasto / Aux Heating", "Keyless Entry", "Power Tailgate", "Soft Close Doors",
-  "Electric Seats", "Memory Seats", "Massage Seats", "Ventilated Seats", "Heated Seats (Front)", "Heated Seats (Rear)",
-  "Leather Seats", "Panoramic Roof", "Navigation System", "Apple CarPlay", "Android Auto", "Bluetooth", 
-  "Head-up Display", "Digital Cockpit", "Sound System (Bose/Harman/Burmester)", "Touchscreen", 
-  "Parking Sensors (Front)", "Parking Sensors (Rear)", "Rear View Camera", "360° Camera", "Self-steering Parking Assist",
-  "Matrix LED Headlights", "Alloy Wheels", "Sport Suspension", "Tow Bar"
-];
-
+const EXTENSIVE_FEATURES = ["ABS", "Adaptive Cruise Control", "Lane Assist", "Blind Spot Monitor", "Traffic Sign Recognition", "Webasto / Aux Heating", "Keyless Entry", "Power Tailgate", "Soft Close Doors", "Electric Seats", "Memory Seats", "Massage Seats", "Ventilated Seats", "Heated Seats (Front)", "Heated Seats (Rear)", "Leather Seats", "Panoramic Roof", "Navigation System", "Apple CarPlay", "Android Auto", "Bluetooth", "Head-up Display", "Digital Cockpit", "Sound System", "Touchscreen", "Parking Sensors (Front)", "Parking Sensors (Rear)", "Rear View Camera", "360° Camera", "Self-steering Parking Assist", "Matrix LED Headlights", "Alloy Wheels", "Sport Suspension", "Tow Bar"];
 
 export const SellPage = () => {
   const navigate = useNavigate();
-  
-  // --- AUTH STATE (JWT INTEGRACIJA) ---
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("editId");
+  const isEditMode = !!editId;
+
+  // --- AUTH & UI STATE ---
   const [token, setToken] = useState<string | null>(null); 
   const [checkingAuth, setCheckingAuth] = useState(true);
-
-  // --- FORM STATE ---
   const [step, setStep] = useState(1); 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // --- DATA STATE ---
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [year, setYear] = useState("");
   const [price, setPrice] = useState("");
   const [bodyType, setBodyType] = useState("Sedan");
-  
   const [milage, setMilage] = useState("");
   const [hp, setHp] = useState("");
   const [fuelType, setFuelType] = useState("Diesel");
@@ -53,52 +41,60 @@ export const SellPage = () => {
   const [seats, setSeats] = useState("5");
   const [euroStandard, setEuroStandard] = useState("Euro 6");
   const [vin, setVin] = useState("");
-  
   const [description, setDescription] = useState("");
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [customFeatureInput, setCustomFeatureInput] = useState("");
   const [images, setImages] = useState<File[]>([]);
-
-  // API Data
+  
+  // --- API DATA ---
   const [brands, setBrands] = useState<CarMake[]>([]);
   const [models, setModels] = useState<CarModel[]>([]);
 
-  // --- AUTH CHECK (JWT) ---
+  // --- INITIAL LOAD (AUTH & DATA) ---
   useEffect(() => {
     const storedToken = localStorage.getItem("jwtToken");
     if (!storedToken) {
-      setTimeout(() => {
-        navigate("/login");
-      }, 1000);
+      setTimeout(() => navigate("/login"), 1000);
     } else {
       setToken(storedToken);
       setCheckingAuth(false);
+      
+      // Load Brands
+      fetch(`${API.BASE_URL}/api/cars/makes`)
+        .then(r => r.json()).then(d => setBrands(d.data || []));
     }
   }, [navigate]);
 
-  // --- DATA FETCHING (Makes/Models) ---
+  // --- EDIT MODE: Load Data ---
   useEffect(() => {
-    fetch(`${API.BASE_URL}/api/cars/makes`)
-      .then(r => r.json())
-      .then(d => setBrands(d.data || []))
-      .catch(e => console.error(e));
-  }, []);
+    if (isEditMode && editId) {
+        setIsLoading(true);
+        fetchListingById(editId).then(res => {
+            const data = res.data;
+            if (data) {
+                setBrand(data.brand); setModel(data.model); setYear(data.year); setPrice(data.price);
+                setBodyType(data.bodyType); setMilage(data.milage); setHp(data.hp);
+                setFuelType(data.fuelType); setGearbox(data.gearbox); setDriveType(data.driveType);
+                setDoors(data.doors); setSeats(data.seats); setEuroStandard(data.euroStandard);
+                setVin(data.vin); setDescription(data.description); setSelectedFeatures(data.features || []);
+                // Note: Images are not preloaded as Files for security/complexity reasons in this demo
+            }
+            setIsLoading(false);
+        }).catch(() => setError("Failed to load listing data."));
+    }
+  }, [isEditMode, editId]);
 
+  // Load Models on Brand Change
   useEffect(() => {
-    if (!brand) { setModels([]); setModel(""); return; }
+    if (!brand) { setModels([]); if(!isEditMode) setModel(""); return; }
     fetch(`${API.BASE_URL}/api/cars/models/${brand}`)
-      .then(r => r.json())
-      .then(d => setModels(d.data || []))
-      .catch(e => console.error(e));
+      .then(r => r.json()).then(d => setModels(d.data || []));
   }, [brand]);
 
   // --- HANDLERS ---
   const toggleFeature = (feat: string) => {
-    if (selectedFeatures.includes(feat)) {
-      setSelectedFeatures(selectedFeatures.filter(f => f !== feat));
-    } else {
-      setSelectedFeatures([...selectedFeatures, feat]);
-    }
+    if (selectedFeatures.includes(feat)) setSelectedFeatures(selectedFeatures.filter(f => f !== feat));
+    else setSelectedFeatures([...selectedFeatures, feat]);
   };
 
   const addCustomFeature = () => {
@@ -109,51 +105,52 @@ export const SellPage = () => {
     }
   };
 
-  const handleCustomFeatureKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addCustomFeature();
-    }
-  };
-
   const handleNext = () => {
+    setError("");
     if (step === 1 && (!brand || !model || !year || !price)) { setError("Please fill in all basic fields."); return; }
     if (step === 2 && (!milage || !hp)) { setError("Please provide technical details."); return; }
-    if (step === 4 && images.length === 0) { setError("Please upload at least one photo."); return; }
-    setError("");
-    setStep((s) => s + 1);
+    if (!isEditMode && step === 4 && images.length === 0) { setError("Please upload at least one photo."); return; }
+    setStep(s => s + 1);
   };
 
   const handleSubmit = async () => {
-    const token = localStorage.getItem("jwtToken"); 
-    
-    if (!token) {
-        setError("Session expired. Please log in again.");
-        return;
-    }
-    
+    if (!token) return;
     setIsLoading(true);
-    
     try {
-      const form = new FormData();
-      // Auth is handled by header, no need for form.append("sellerId", userId)
-      form.append("brand", brand); form.append("model", model); form.append("year", year); form.append("price", price); form.append("bodyType", bodyType);
-      form.append("milage", milage); form.append("hp", hp); form.append("fuelType", fuelType); form.append("gearbox", gearbox);
-      form.append("driveType", driveType); form.append("doors", doors); form.append("seats", seats); form.append("euroStandard", euroStandard);
-      form.append("vin", vin); form.append("description", description);
-      form.append("features", JSON.stringify(selectedFeatures)); // Array to JSON string
+      if (isEditMode) {
+          // PUT REQUEST (JSON)
+          const payload = {
+             brand, model, price: Number(price), year: Number(year), milage: Number(milage), hp: Number(hp),
+             bodyType, fuelType, gearbox, driveType, doors: Number(doors), seats: Number(seats), euroStandard, vin, description,
+             features: selectedFeatures
+          };
+          const res = await fetch(`${API.BASE_URL}/api/listings/${editId}`, {
+             method: "PUT",
+             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+             body: JSON.stringify(payload)
+          });
+          if (!res.ok) throw new Error("Update failed");
+          navigate("/garage");
+      } else {
+          // POST REQUEST (FormData)
+          const form = new FormData();
+          form.append("brand", brand); form.append("model", model); form.append("year", year.toString()); form.append("price", price.toString());
+          form.append("milage", milage.toString()); form.append("hp", hp.toString()); form.append("bodyType", bodyType); form.append("fuelType", fuelType);
+          form.append("gearbox", gearbox); form.append("driveType", driveType); form.append("doors", doors.toString()); form.append("seats", seats.toString());
+          form.append("euroStandard", euroStandard); form.append("vin", vin); form.append("description", description);
+          form.append("features", JSON.stringify(selectedFeatures));
+          images.forEach((file) => form.append("images", file));
 
-      images.forEach((file) => form.append("images", file));
-
-      const res = await fetch(`${API.BASE_URL}${API.ENDPOINTS.LISTINGS.CREATE}`, {
-        method: "POST",
-        body: form,
-      });
-
-      if (!res.ok) throw new Error("Failed");
-      navigate("/listings");
+          const res = await fetch(`${API.BASE_URL}${API.ENDPOINTS.LISTINGS.CREATE}`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` },
+            body: form,
+          });
+          if (!res.ok) throw new Error("Failed");
+          navigate("/listings");
+      }
     } catch (err) {
-      setError("Failed to publish. Try again.");
+      setError("Failed to process. Try again.");
     } finally {
       setIsLoading(false);
     }
@@ -161,18 +158,8 @@ export const SellPage = () => {
 
   const formatPrice = (p: string) => new Intl.NumberFormat('en-DE', { style: 'currency', currency: 'EUR' }).format(Number(p));
 
-  // --- LOADING / AUTH SCREEN ---
-  if (checkingAuth) {
-    return (
-        <div className="min-h-screen bg-background flex flex-col items-center justify-center text-white gap-4">
-            <Lock size={48} className="text-primary mb-2" />
-            <h2 className="text-2xl font-bold">Authentication Required</h2>
-            <p className="text-text-muted">Please login to sell your car. Redirecting...</p>
-        </div>
-    );
-  }
+  if (checkingAuth) return <div className="min-h-screen bg-background flex items-center justify-center text-white"><Loader2 className="animate-spin mr-2"/> Verifying access...</div>;
 
-  // --- GLAVNI RENDER ---
   return (
     <div className="min-h-screen bg-background flex flex-col pb-20">
       <NavbarSecond />
@@ -180,224 +167,133 @@ export const SellPage = () => {
       <div className="flex-1 flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-5xl">
           
-          {/* HEADER */}
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-black text-white mb-2">
-              {step === 5 ? "Review Your Listing" : "Sell Your Car"}
-            </h1>
-            <p className="text-text-muted">Step {step} of 5</p>
+            <h1 className="text-3xl font-black text-white mb-2">{isEditMode ? "Edit Listing" : (step === 5 ? "Review" : "Sell Your Car")}</h1>
+            <p className="text-text-muted">{isEditMode ? "Update vehicle details below." : `Step ${step} of 5`}</p>
           </div>
 
-          {/* PROGRESS BAR */}
-          <div className="mb-8 flex items-center justify-between relative max-w-lg mx-auto">
-             <div className="absolute top-1/2 left-0 w-full h-1 bg-surface -z-10 rounded-full"></div>
-             <div className="absolute top-1/2 left-0 h-1 bg-secondary transition-all duration-500 -z-10 rounded-full" style={{ width: `${((step - 1) / 4) * 100}%` }}></div>
-             {[1, 2, 3, 4, 5].map((s) => (
-                 <div key={s} className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold border-2 transition-colors duration-300 ${step >= s ? "bg-secondary border-secondary text-white" : "bg-surface border-surface-highlight text-text-muted"}`}>
-                    {step > s ? <CheckCircle size={14}/> : s}
-                 </div>
-             ))}
-          </div>
+          {/* STEP PROGRESS (Hide in Edit Mode or show as completed) */}
+          {!isEditMode && (
+            <div className="mb-8 flex items-center justify-between relative max-w-lg mx-auto">
+                <div className="absolute top-1/2 left-0 w-full h-1 bg-surface -z-10 rounded-full"></div>
+                <div className="absolute top-1/2 left-0 h-1 bg-secondary transition-all duration-500 -z-10 rounded-full" style={{ width: `${((step - 1) / 4) * 100}%` }}></div>
+                {[1, 2, 3, 4, 5].map((s) => (
+                    <div key={s} className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold border-2 transition-colors duration-300 ${step >= s ? "bg-secondary border-secondary text-white" : "bg-surface border-surface-highlight text-text-muted"}`}>
+                        {step > s ? <CheckCircle size={14}/> : s}
+                    </div>
+                ))}
+            </div>
+          )}
 
-          {/* --- STEP 5: PREVIEW MODE --- */}
+          {/* --- PREVIEW CARD (STEP 5) --- */}
           {step === 5 ? (
              <div className="animate-in fade-in zoom-in-95 duration-300">
                 <div className="bg-surface border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-                    <div className="relative h-64 md:h-80 bg-black">
-                        {images.length > 0 ? <img src={URL.createObjectURL(images[0])} className="w-full h-full object-cover opacity-90" /> : <div className="w-full h-full grid place-items-center text-gray-500">No Image</div>}
-                        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-surface to-transparent h-32"></div>
-                        <div className="absolute bottom-6 left-6">
+                    {/* Preview Header - if editing, we might not show new images yet */}
+                    <div className="relative h-64 bg-black">
+                         {images.length > 0 ? <img src={URL.createObjectURL(images[0])} className="w-full h-full object-cover opacity-80" /> : <div className="w-full h-full grid place-items-center text-gray-500 bg-white/5">Image Preview Unavailable in Edit Mode</div>}
+                         <div className="absolute bottom-6 left-6">
                             <h2 className="text-3xl font-bold text-white shadow-black drop-shadow-md">{brand} {model}</h2>
                             <p className="text-secondary font-bold text-2xl mt-1">{formatPrice(price)}</p>
                         </div>
                     </div>
-                    <div className="p-6 md:p-8">
-                        {selectedFeatures.length > 0 && (
-                           <div className="mb-8">
-                              <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2"><Zap size={18} className="text-secondary"/> Equipment</h3>
-                              <div className="flex flex-wrap gap-2">
-                                 {selectedFeatures.map(f => (
-                                    <span key={f} className="text-xs bg-white/5 text-white px-3 py-1 rounded-full border border-white/10 flex items-center gap-1">
-                                        <CheckCircle size={10} className="text-secondary"/> {f}
-                                    </span>
-                                 ))}
-                              </div>
-                           </div>
-                        )}
+                    
+                    <div className="p-6">
+                        {/* Summary Grid */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div className="bg-background p-3 rounded-xl border border-white/5"><p className="text-xs text-text-muted">Year</p><p className="font-bold text-white">{year}</p></div>
+                            <div className="bg-background p-3 rounded-xl border border-white/5"><p className="text-xs text-text-muted">Mileage</p><p className="font-bold text-white">{milage} km</p></div>
+                            <div className="bg-background p-3 rounded-xl border border-white/5"><p className="text-xs text-text-muted">Fuel</p><p className="font-bold text-white">{fuelType}</p></div>
+                            <div className="bg-background p-3 rounded-xl border border-white/5"><p className="text-xs text-text-muted">Gearbox</p><p className="font-bold text-white">{gearbox}</p></div>
+                        </div>
+                        <div className="bg-background p-4 rounded-xl border border-white/5 mb-6">
+                            <p className="text-text-muted text-xs uppercase font-bold mb-2">Description</p>
+                            <p className="text-white text-sm">{description || "No description."}</p>
+                        </div>
+                        
                         <div className="flex gap-4 pt-4 border-t border-white/10">
-                            <button onClick={() => setStep(1)} className="flex-1 py-3 rounded-xl border border-white/10 text-text-muted hover:bg-white/5 hover:text-white">Edit</button>
-                            <button onClick={handleSubmit} disabled={isLoading} className="flex-[2] py-3 bg-secondary hover:bg-secondary-hover text-white font-bold rounded-xl shadow-lg">{isLoading ? "Publishing..." : "Confirm & Publish Listing"}</button>
+                            <button onClick={() => setStep(1)} className="flex-1 py-3 rounded-xl border border-white/10 text-text-muted hover:bg-white/5 hover:text-white">Edit Details</button>
+                            <button onClick={handleSubmit} disabled={isLoading} className="flex-[2] py-3 bg-secondary hover:bg-secondary-hover text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2">
+                                {isLoading && <Loader2 className="animate-spin"/>} {isEditMode ? "Update Listing" : "Publish Listing"}
+                            </button>
                         </div>
                     </div>
                 </div>
              </div>
           ) : (
-            /* --- FORM START --- */
+            /* --- FORM STEPS --- */
             <form onSubmit={(e) => e.preventDefault()} className="bg-surface border border-white/10 rounded-2xl shadow-2xl p-6 md:p-8">
-                {error && <div className="mb-6 p-3 bg-red-500/10 text-red-400 text-sm rounded-lg">⚠️ {error}</div>}
+                {error && <div className="mb-6 p-3 bg-red-500/10 text-red-400 text-sm rounded-lg border border-red-500/20">⚠️ {error}</div>}
                 
                 {/* STEP 1: BASIC */}
-                {step === 1 && (
-                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-text-muted uppercase ml-1">Make</label>
-                                <select value={brand} onChange={e => {setBrand(e.target.value); setModel("")}} className="input-field">
-                                    <option value="">Select Brand</option>
-                                    {brands.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
-                                </select>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-text-muted uppercase ml-1">Model</label>
-                                <select value={model} onChange={e => setModel(e.target.value)} disabled={!brand} className="input-field disabled:opacity-50">
-                                    <option value="">Select Model</option>
-                                    {models.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
-                                </select>
-                            </div>
-                        </div>
-                        <div className="grid md:grid-cols-2 gap-4">
-                             <div className="space-y-1">
-                                <label className="text-xs font-bold text-text-muted uppercase ml-1">Body Type</label>
-                                <select value={bodyType} onChange={e => setBodyType(e.target.value)} className="input-field">
-                                    {BODY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                                </select>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-text-muted uppercase ml-1">Year</label>
-                                <input type="number" value={year} onChange={e => setYear(e.target.value)} className="input-field" placeholder="2020"/>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-text-muted uppercase ml-1">Price (€)</label>
-                            <input type="number" value={price} onChange={e => setPrice(e.target.value)} className="input-field" placeholder="15000"/>
-                        </div>
+                <div className={step === 1 ? "block space-y-4 animate-in fade-in" : "hidden"}>
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <div><label className="text-xs font-bold text-text-muted ml-1">Make</label><select value={brand} onChange={e => {setBrand(e.target.value); setModel("")}} className="input-field"><option value="">Select</option>{brands.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}</select></div>
+                        <div><label className="text-xs font-bold text-text-muted ml-1">Model</label><select value={model} onChange={e => setModel(e.target.value)} disabled={!brand} className="input-field disabled:opacity-50"><option value="">Select</option>{models.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</select></div>
                     </div>
-                )}
-
-                {/* STEP 2: TECH SPECS */}
-                {step === 2 && (
-                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-                        <div className="grid md:grid-cols-2 gap-4">
-                             <div className="space-y-1">
-                                <label className="text-xs font-bold text-text-muted uppercase ml-1">Mileage (km)</label>
-                                <input type="number" value={milage} onChange={e => setMilage(e.target.value)} className="input-field"/>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-text-muted uppercase ml-1">Power (HP)</label>
-                                <input type="number" value={hp} onChange={e => setHp(e.target.value)} className="input-field"/>
-                            </div>
-                        </div>
-                        
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-text-muted uppercase ml-1">Fuel Type</label>
-                                <select value={fuelType} onChange={e => setFuelType(e.target.value)} className="input-field">
-                                    <option>Diesel</option><option>Petrol</option><option>Electric</option><option>Hybrid</option>
-                                </select>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-text-muted uppercase ml-1">Gearbox</label>
-                                <select value={gearbox} onChange={e => setGearbox(e.target.value)} className="input-field">
-                                    <option>Manual</option><option>Automatic</option>
-                                </select>
-                            </div>
-                        </div>
-
-                         <div className="grid md:grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-text-muted uppercase ml-1">Drive Type</label>
-                                <select value={driveType} onChange={e => setDriveType(e.target.value)} className="input-field">
-                                    <option>FWD</option><option>RWD</option><option>AWD</option>
-                                </select>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-text-muted uppercase ml-1">Emission Class</label>
-                                <select value={euroStandard} onChange={e => setEuroStandard(e.target.value)} className="input-field">
-                                    <option>Euro 6</option><option>Euro 6d</option><option>Euro 5</option><option>Euro 4</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div className="grid md:grid-cols-2 gap-4">
-                             <div className="space-y-1">
-                                <label className="text-xs font-bold text-text-muted uppercase ml-1">Doors</label>
-                                <input type="number" value={doors} onChange={e => setDoors(e.target.value)} className="input-field"/>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-text-muted uppercase ml-1">Seats</label>
-                                <input type="number" value={seats} onChange={e => setSeats(e.target.value)} className="input-field"/>
-                            </div>
-                        </div>
-
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-text-muted uppercase ml-1">VIN Number (Optional)</label>
-                            <input type="text" value={vin} onChange={e => setVin(e.target.value.toUpperCase())} className="input-field font-mono placeholder:text-white/20" placeholder="WVWZZZ..."/>
-                        </div>
-
-                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-text-muted uppercase ml-1">Description</label>
-                            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4} className="input-field resize-none" placeholder="Tell us about the car..."/>
-                        </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <div><label className="text-xs font-bold text-text-muted ml-1">Year</label><input type="number" value={year} onChange={e => setYear(e.target.value)} className="input-field"/></div>
+                        <div><label className="text-xs font-bold text-text-muted ml-1">Price (€)</label><input type="number" value={price} onChange={e => setPrice(e.target.value)} className="input-field"/></div>
                     </div>
-                )}
+                    <div><label className="text-xs font-bold text-text-muted ml-1">Body Type</label><select value={bodyType} onChange={e => setBodyType(e.target.value)} className="input-field">{BODY_TYPES.map(t => <option key={t}>{t}</option>)}</select></div>
+                </div>
+
+                {/* STEP 2: TECH */}
+                <div className={step === 2 ? "block space-y-4 animate-in fade-in" : "hidden"}>
+                     <div className="grid md:grid-cols-2 gap-4">
+                         <div><label className="text-xs font-bold text-text-muted ml-1">Mileage</label><input type="number" value={milage} onChange={e => setMilage(e.target.value)} className="input-field"/></div>
+                         <div><label className="text-xs font-bold text-text-muted ml-1">Power (HP)</label><input type="number" value={hp} onChange={e => setHp(e.target.value)} className="input-field"/></div>
+                     </div>
+                     <div className="grid md:grid-cols-2 gap-4">
+                         <div><label className="text-xs font-bold text-text-muted ml-1">Fuel</label><select value={fuelType} onChange={e => setFuelType(e.target.value)} className="input-field"><option>Diesel</option><option>Petrol</option><option>Electric</option><option>Hybrid</option></select></div>
+                         <div><label className="text-xs font-bold text-text-muted ml-1">Gearbox</label><select value={gearbox} onChange={e => setGearbox(e.target.value)} className="input-field"><option>Manual</option><option>Automatic</option></select></div>
+                     </div>
+                     <div className="grid md:grid-cols-2 gap-4">
+                         <div><label className="text-xs font-bold text-text-muted ml-1">Drive</label><select value={driveType} onChange={e => setDriveType(e.target.value)} className="input-field"><option>FWD</option><option>RWD</option><option>AWD</option></select></div>
+                         <div><label className="text-xs font-bold text-text-muted ml-1">Emission</label><select value={euroStandard} onChange={e => setEuroStandard(e.target.value)} className="input-field"><option>Euro 6</option><option>Euro 6d</option><option>Euro 5</option><option>Euro 4</option></select></div>
+                     </div>
+                     <div className="grid md:grid-cols-2 gap-4">
+                         <div><label className="text-xs font-bold text-text-muted ml-1">Doors</label><input type="number" value={doors} onChange={e => setDoors(e.target.value)} className="input-field"/></div>
+                         <div><label className="text-xs font-bold text-text-muted ml-1">Seats</label><input type="number" value={seats} onChange={e => setSeats(e.target.value)} className="input-field"/></div>
+                     </div>
+                     <div><label className="text-xs font-bold text-text-muted ml-1">VIN</label><input type="text" value={vin} onChange={e => setVin(e.target.value)} className="input-field font-mono"/></div>
+                     <div><label className="text-xs font-bold text-text-muted ml-1">Description</label><textarea value={description} onChange={e => setDescription(e.target.value)} rows={4} className="input-field resize-none"/></div>
+                </div>
 
                 {/* STEP 3: FEATURES */}
-                {step === 3 && (
-                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-                        <div className="flex flex-col gap-4">
-                            <div className="flex gap-2">
-                                <input 
-                                    type="text" 
-                                    value={customFeatureInput}
-                                    onChange={(e) => setCustomFeatureInput(e.target.value)}
-                                    onKeyDown={handleCustomFeatureKeyDown}
-                                    placeholder="Type custom equipment and press Enter..."
-                                    className="input-field flex-1"
-                                />
-                                <button type="button" onClick={addCustomFeature} className="bg-secondary hover:bg-secondary-hover text-white px-4 rounded-xl transition-colors font-bold">
-                                    <Plus size={20}/>
-                                </button>
-                            </div>
-                            {selectedFeatures.length > 0 && (
-                                <div className="flex flex-wrap gap-2 p-4 bg-background rounded-xl border border-white/10">
-                                    {selectedFeatures.map(f => (
-                                        <button key={f} type="button" onClick={() => toggleFeature(f)} className="flex items-center gap-1 bg-primary/20 text-primary border border-primary/30 px-3 py-1 rounded-full text-xs font-bold hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30 transition-all group">
-                                            {f} <X size={12} className="group-hover:scale-110"/>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                            <p className="text-xs text-text-muted uppercase font-bold mt-2">Popular Options</p>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-                                {EXTENSIVE_FEATURES.map((feat) => (
-                                    <div key={feat} onClick={() => toggleFeature(feat)} className={`cursor-pointer p-3 rounded-xl border transition-all flex items-center gap-3 ${selectedFeatures.includes(feat) ? "bg-primary/20 border-primary text-white" : "bg-background border-white/10 text-text-muted hover:bg-white/5"}`}>
-                                        <div className={`w-5 h-5 rounded flex items-center justify-center border flex-shrink-0 ${selectedFeatures.includes(feat) ? "bg-primary border-primary" : "border-white/30"}`}>
-                                            {selectedFeatures.includes(feat) && <CheckCircle size={14} className="text-white"/>}
-                                        </div>
-                                        <span className="text-sm font-medium">{feat}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                <div className={step === 3 ? "block space-y-4 animate-in fade-in" : "hidden"}>
+                    <div className="flex gap-2">
+                        <input type="text" value={customFeatureInput} onChange={e => setCustomFeatureInput(e.target.value)} placeholder="Add custom feature..." className="input-field flex-1" onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomFeature())} />
+                        <button onClick={addCustomFeature} className="bg-secondary text-white px-4 rounded-xl font-bold"><Plus/></button>
                     </div>
-                )}
+                    <div className="flex flex-wrap gap-2">{selectedFeatures.map(f => <span key={f} onClick={() => toggleFeature(f)} className="text-xs bg-primary/20 text-primary border border-primary/30 px-3 py-1 rounded-full cursor-pointer hover:bg-red-500/20 hover:text-red-400">{f} <X size={10} className="inline"/></span>)}</div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 h-64 overflow-y-auto pr-2 custom-scrollbar">
+                        {EXTENSIVE_FEATURES.map(f => (
+                            <div key={f} onClick={() => toggleFeature(f)} className={`p-3 rounded-xl border cursor-pointer text-sm flex items-center gap-2 ${selectedFeatures.includes(f) ? "bg-primary/20 border-primary text-white" : "border-white/10 text-text-muted hover:bg-white/5"}`}>
+                                {selectedFeatures.includes(f) && <CheckCircle size={14} className="text-white"/>} {f}
+                            </div>
+                        ))}
+                    </div>
+                </div>
 
-                {/* STEP 4: IMAGES */}
-                {step === 4 && (
-                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-                        <div className="p-4 bg-background rounded-xl border border-dashed border-white/20 text-center">
+                {/* STEP 4: IMAGES (Hide in Edit Mode) */}
+                <div className={step === 4 ? "block space-y-4 animate-in fade-in" : "hidden"}>
+                    {isEditMode ? (
+                         <div className="text-center p-12 border border-white/10 rounded-xl bg-white/5">
+                            <p className="text-text-muted font-medium">Image updates are disabled in Edit Mode.</p>
+                            <p className="text-xs text-gray-500 mt-1">To change images, delete this listing and create a new one.</p>
+                         </div>
+                    ) : (
+                         <div className="p-4 bg-background rounded-xl border border-dashed border-white/20 text-center">
                             <ImageUploader files={images} onChange={setImages} />
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
 
-                {/* NAVIGATION */}
+                {/* NAV */}
                 <div className="mt-8 flex justify-between pt-4 border-t border-white/10">
-                    {step > 1 ? (
-                        <button type="button" onClick={() => setStep(s => s - 1)} className="px-6 py-3 rounded-xl font-bold text-text-muted hover:text-white hover:bg-white/5 flex items-center gap-2"><ChevronLeft size={18} /> Back</button>
-                    ) : <div></div>}
-                    <button type="button" onClick={handleNext} className="px-8 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-lg shadow-primary/20 flex items-center gap-2">
-                        {step === 4 ? "Preview Listing" : "Next"} {step !== 4 && <ChevronRight size={18} />}
-                    </button>
+                    {step > 1 ? <button type="button" onClick={() => setStep(s => s - 1)} className="px-6 py-3 rounded-xl font-bold text-text-muted hover:text-white hover:bg-white/5 flex items-center gap-2"><ChevronLeft size={18}/> Back</button> : <div></div>}
+                    <button type="button" onClick={handleNext} className="px-8 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-lg flex items-center gap-2">{step === 4 ? "Preview" : "Next"} <ChevronRight size={18}/></button>
                 </div>
             </form>
           )}
