@@ -204,7 +204,11 @@ app.get("/api/users/:userId", async (req, res) => {
 app.get("/api/listings/:id/contact", async (req, res) => {
     try {
         const listing = await db.collection("listings").findOne({ _id: new ObjectId(req.params.id) });
-        const seller = await db.collection("users").findOne({ _id: listing.sellerId });
+        const slrId = listing.sellerId;
+        const seller = await db.collection("users").findOne({ _id: new ObjectId(listing.sellerId) });
+        console.log("📞 Fetched Seller Phone:", seller?.phone);
+        console.log("📞 For Listing ID:", req.params.id);
+        console.log("📞 Seller ObjectId:", listing.sellerId);
         res.json({ success: true, phone: seller?.phone });
     } catch { res.json({ success: false }); }
 });
