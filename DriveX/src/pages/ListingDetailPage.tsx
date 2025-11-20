@@ -107,22 +107,29 @@ export const ListingDetailPage = () => {
       }
   };
 
-  const handleShowPhone = async () => {
+const handleShowPhone = async () => {
     if (!id || sellerPhone || phoneLoading) return;
     setPhoneLoading(true);
     try {
         const res = await fetch(`${API_URL}/api/listings/${id}/contact`);
         const json = await res.json();
-        if (json.success) setSellerPhone(json.phone);
-        else setSellerPhone("N/A");
+        if (json.success && json.phone) {
+            setSellerPhone(json.phone);
+        } else {
+            setSellerPhone("N/A - Ni telefona");
+        }
     } catch (e) {
-        setSellerPhone("Error");
+        setSellerPhone("Napaka pri povezavi");
     } finally {
         setPhoneLoading(false);
     }
   };
-
-  const formatCurrency = (v: number) => new Intl.NumberFormat('en-DE', { style: 'currency', currency: 'EUR' }).format(v);
+  const formatCurrency = (v: number) => new Intl.NumberFormat('en-DE', { 
+    style: 'currency', 
+    currency: 'EUR',
+    maximumFractionDigits: 0, // To odstrani cente (decimalke)
+    minimumFractionDigits: 0  // To zagotovi, da se ne dodajo nule, če je celo število
+  }).format(v);
   const formatNumber = (v: number) => new Intl.NumberFormat('en-DE').format(v);
 
   if (loading) return <div className="min-h-screen bg-background grid place-items-center text-text-muted"><Loader2 className="animate-spin"/></div>;

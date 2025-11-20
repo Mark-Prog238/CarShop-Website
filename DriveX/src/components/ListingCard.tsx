@@ -26,9 +26,12 @@ export const ListingCard = ({ listing }: { listing: Listing }) => {
   // Sestavljanje URL-ja slike (dodamo base URL backenda, če je slika lokalna)
   const imageUrl = image?.startsWith("http") ? image : `${API.BASE_URL}${image}`;
   
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-DE', { style: 'currency', currency: 'EUR' }).format(value);
-  };
+  const formatCurrency = (v: number) => new Intl.NumberFormat('en-DE', { 
+    style: 'currency', 
+    currency: 'EUR',
+    maximumFractionDigits: 0, // To odstrani cente (decimalke)
+    minimumFractionDigits: 0  // To zagotovi, da se ne dodajo nule, če je celo število
+  }).format(v);
   
   const formatNumber = (value: number) => {
     return new Intl.NumberFormat('en-DE').format(value);
