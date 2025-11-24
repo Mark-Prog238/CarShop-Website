@@ -141,7 +141,6 @@ const handleShowPhone = async () => {
     driveType: listing.driveType || "—",
     hp: listing.hp || "—",
     kW: listing.kW || "—",
-    engineDisplacement: listing.engineDisplacement || "—",
     vin: listing.vin,
     features: listing.features || [],
     doors: listing.doors || "—",
@@ -303,7 +302,6 @@ const handleShowPhone = async () => {
                     { label: "Body Type", val: spec.bodyType },
                     { label: "Drive Type", val: spec.driveType },
                     { label: "Power", val: `${spec.hp} HP / ${spec.kW} kW` },
-                    { label: "Engine Size", val: `${spec.engineDisplacement} ccm` },
                     { label: "Doors / Seats", val: `${spec.doors} / ${spec.seats}` },
                     { label: "Emission Class", val: spec.euroStandard },
                  ].map((row, i) => (

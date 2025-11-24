@@ -124,7 +124,7 @@ export const ListingsPage = () => {
                 >
                   <option value="">All Makes</option>
                   {uniqueMakes.map((m) => (
-                    <option key={m} value={m} className="text-black">{m}</option>
+                    <option key={m} value={m} className="text-white">{m}</option>
                   ))}
                 </Select>
               </div>
