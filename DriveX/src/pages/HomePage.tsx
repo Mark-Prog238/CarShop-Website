@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { DollarSign, ShieldCheck, Zap, Search, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import API from "../components/api";
+import { fetchListings } from "../components/api";
 import { ListingCard } from "../components/ListingCard";
 import { Link, useNavigate } from "react-router";
 
