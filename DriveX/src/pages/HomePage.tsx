@@ -65,11 +65,11 @@ export const HomePage = () => {
       try {
         const res = await fetchListings();
         if (res.data && Array.isArray(res.data)) {
-          setListings(res.data);
+          setFeatured(res.data);
         } else if (Array.isArray(res)) {
-          setListings(res);
+          setFeatured(res);
         } else {
-          setListings([]);
+          setFeatured([]);
         }
       } catch (error) {
         console.error("Failed to load listings", error);
