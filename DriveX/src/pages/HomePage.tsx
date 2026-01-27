@@ -75,6 +75,7 @@ export const HomePage = () => {
         console.error("Failed to load listings", error);
       } finally {
         setLoading(false);
+        console.log("loaded")
       }
     };
     load();
@@ -272,7 +273,7 @@ export const HomePage = () => {
             </Link>
           </div>
 
-          {featured ? (
+          {loading ? (
             <div className="text-center py-12 bg-[#181a25] rounded-xl border border-white/10">
               <p className="text-gray-500">Loading listings...</p>
             </div>
