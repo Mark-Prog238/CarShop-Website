@@ -61,18 +61,23 @@ export const HomePage = () => {
   // FETCH FEATURED LISTINGS (FAST endpoint)
   // -----------------------------
   useEffect(() => {
-    (async () => {
+    const load = async () => {
       try {
-        setLoadingFeatured(true);
-        const res = await fetch(`${API.BASE_URL}/api/listings/featured`);
-        const j = await res.json();
-        setFeatured(j.data || []);
-      } catch (err) {
-        console.error("Error loading featured listings:", err);
+        const res = await fetchListings();
+        if (res.data && Array.isArray(res.data)) {
+          setListings(res.data);
+        } else if (Array.isArray(res)) {
+          setListings(res);
+        } else {
+          setListings([]);
+        }
+      } catch (error) {
+        console.error("Failed to load listings", error);
       } finally {
-        setLoadingFeatured(false);
+        setLoading(false);
       }
-    })();
+    };
+    load();
   }, []);
 
   // -----------------------------
