@@ -21,7 +21,7 @@ export const HomePage = () => {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [featured, setFeatured] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   // -----------------------------
   // FETCH MAKES (Fast + Cached on Backend)
