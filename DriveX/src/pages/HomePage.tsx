@@ -21,7 +21,6 @@ export const HomePage = () => {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [featured, setFeatured] = useState<any[]>([]);
-  const [loadingFeatured, setLoadingFeatured] = useState(true);
 
   // -----------------------------
   // FETCH MAKES (Fast + Cached on Backend)
@@ -273,7 +272,7 @@ export const HomePage = () => {
             </Link>
           </div>
 
-          {loadingFeatured ? (
+          {featured ? (
             <div className="text-center py-12 bg-[#181a25] rounded-xl border border-white/10">
               <p className="text-gray-500">Loading listings...</p>
             </div>
