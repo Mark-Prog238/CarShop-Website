@@ -1,4 +1,3 @@
-// Optimized Backend – Faster Mongo Queries, Cleaner API
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
@@ -10,211 +9,229 @@ import { fileURLToPath } from "url";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-// -------------------- CONFIG --------------------
 const PORT = process.env.PORT || 8000;
-const PUBLIC_URL = process.env.PUBLIC_URL;
+const PUBLIC_URL = process.env.PUBLIC_URL; 
 const FRONTEND_URL = process.env.FRONTEND_URL;
-const LOCAL_URL = process.env.LOCAL_URL;
+const LOCAL_URL = process.env.LOCAL_URL
 const MONGODB_URI = process.env.MONGODB_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const UPLOAD_DIR = path.join(__dirname, "uploads");
-
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR);
-
-// -------------------- SERVER INIT --------------------
 const app = express();
-app.use(express.json({ limit: "10mb" }));
-app.use(cors({ origin: [FRONTEND_URL, LOCAL_URL], credentials: true }));
-app.use("/uploads", express.static(UPLOAD_DIR));
-
 const client = new MongoClient(MONGODB_URI);
 let db;
 
-// -------------------- CONNECT + INDEXES --------------------
+
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR);
+}
+
 async function startServer() {
+  try {
     await client.connect();
-    db = client.db("avtoDB");
-
-    // 🟢 PERFORMANCE: Add INDEXES
-    db.collection("listings").createIndex({ createdAt: -1 });
-    db.collection("listings").createIndex({ sellerId: 1 });
-    db.collection("users").createIndex({ email: 1 }, { unique: true });
-
-    console.log("🔥 Mongo Connected + Indexes Ready");
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    db = client.db("avtoDB"); 
+    console.log("✅ MongoDB Povezan");
+    app.listen(PORT, () => console.log(`🚀 Server teče na portu ${PORT}`));
+  } catch (e) {
+    console.error("❌ DB Error:", e);
+  }
 }
 startServer();
 
-// -------------------- UPLOAD HANDLING --------------------
+
+
 const storage = multer.diskStorage({
-    destination: (_, __, cb) => cb(null, UPLOAD_DIR),
-    filename: (_, file, cb) =>
-        cb(null, `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.]/g, "_")}`)
+    destination: (req, file, cb) => {
+        cb(null, UPLOAD_DIR);
+    },
+    filename: (req, file, cb) => {
+        const safeName = file.originalname.replace(/[^a-zA-Z0-9.]/g, "_");
+        cb(null, `${Date.now()}-${safeName}`);
+    }
 });
 const upload = multer({ storage });
+app.use(cors({ origin: [FRONTEND_URL, LOCAL_URL,], credentials: true }));
+app.use("/uploads", express.static(UPLOAD_DIR));
 
-// -------------------- HELPERS --------------------
+
 const getUserId = (req) => {
     try {
-        const token = req.headers.authorization?.split(" ")[1];
-        return jwt.verify(token, JWT_SECRET).userId;
-    } catch {
-        return null;
-    }
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) return null;
+        const decoded = jwt.verify(token, JWT_SECRET);
+        return decoded.userId;
+    } catch { return null; }
 };
 
-// -------------------- AUTH --------------------
-app.post("/api/login", async (req, res) => {
-    const user = await db.collection("users").findOne({ email: req.body.email });
-    if (!user || !(await bcrypt.compare(req.body.password, user.password)))
-        return res.status(401).json({ success: false, message: "Wrong credentials" });
 
-    const token = jwt.sign(
-        { userId: user._id.toString(), email: user.email },
-        JWT_SECRET,
-        { expiresIn: "30d" }
-    );
-
-    res.json({ success: true, token, fullName: user.fullName });
-});
-
-app.post("/api/register", async (req, res) => {
-    const { fullName, email, password, phone, address, profileType, companyName } = req.body;
-
+// LOGIN
+app.post("/api/login", express.json(), async (req, res) => {
     try {
-        const hashed = await bcrypt.hash(password, 10);
-        const user = await db.collection("users").insertOne({
-            fullName,
-            email,
-            password: hashed,
-            phone,
-            address,
-            profileType,
-            companyName,
-            createdAt: new Date()
+        const { email, password } = req.body;
+        const user = await db.collection("users").findOne({ email });
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.status(401).json({ success: false, message: "Wrong credentials" });
+        }
+        const token = jwt.sign({ userId: user._id.toString(), email: user.email }, JWT_SECRET, { expiresIn: '30d' });
+        res.json({ success: true, token, fullName: user.fullName });
+    } catch { res.json({ success: false }); }
+});
+
+// REGISTER
+app.post("/api/register", express.json(), async (req, res) => {
+    try {
+        const { fullName, email, password, phone, address, profileType, companyName } = req.body;
+        if (await db.collection("users").findOne({ email })) {
+            return res.json({ success: false, message: "User exists" });
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const result = await db.collection("users").insertOne({ 
+            fullName, email, password: hashedPassword, phone, address, profileType, companyName, createdAt: new Date() 
         });
-        res.json({ success: true, userId: user.insertedId });
-    } catch {
-        res.json({ success: false, message: "User exists" });
-    }
+        res.json({ success: true, userId: result.insertedId });
+    } catch { res.json({ success: false }); }
 });
 
-// -------------------- LISTINGS --------------------
+// CREATE
 app.post("/api/listings", upload.array("images"), async (req, res) => {
+  try {
     const userId = getUserId(req);
-    const files = req.files || [];
-
-    const images = files.map(f => `${PUBLIC_URL}/uploads/${f.filename}`);
-    const features = req.body.features ? JSON.parse(req.body.features) : [];
-    const hp = Number(req.body.hp);
-
-    const listing = {
-        ...req.body,
-        price: Number(req.body.price),
-        year: Number(req.body.year),
-        milage: Number(req.body.milage),
-        hp,
-        kW: Math.round(hp * 0.74),
-        features,
-        images,
-        sellerId: new ObjectId(userId),
-        createdAt: new Date(),
-        status: "active"
+    const { 
+      brand, model, price, year, milage, hp, description, bodyType, fuelType, gearbox, vin, driveType, doors, seats, euroStandard, features 
+    } = req.body;
+    const imageUrls = (req.files || []).map(file => {
+      return `${PUBLIC_URL}/uploads/${file.filename}`;
+    });
+    const parsedFeatures = features ? JSON.parse(features) : [];
+    const calculatedKw = hp ? Math.round(Number(hp) * 0.74) : undefined;
+    const newListing = {
+      brand, model, 
+      price: Number(price), year: Number(year), milage: Number(milage), hp: Number(hp), 
+      kW: calculatedKw, bodyType, fuelType, gearbox, vin, driveType, doors, seats, euroStandard, 
+      features: parsedFeatures, description,
+      
+      sellerId: userId ? new ObjectId(userId) : new ObjectId(), 
+      images: imageUrls, 
+      createdAt: new Date(), 
+      status: "active"
     };
-
-    await db.collection("listings").insertOne(listing);
+    await db.collection("listings").insertOne(newListing);
     res.json({ success: true, message: "Created" });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ success: false });
+  }
 });
 
-// GET ALL (fast, sorted, ready for pagination)
-app.get("/api/listings", async (req, res) => {
-    const listings = await db.collection("listings")
-        .find({})
-        .project({ description: 0 }) // 🟢 removes heavy text for faster load
-        .sort({ createdAt: -1 })
-        .toArray();
-
-    res.json({ success: true, data: listings });
+// VSE
+app.get("/api/listings", async (_req, res) => {
+  const data = await db.collection("listings").find({}).sort({ createdAt: -1 }).toArray();
+  res.json({ success: true, data });
 });
 
-// GET BY ID (fast)
+// POSAMEZNO
 app.get("/api/listings/:id", async (req, res) => {
-    const id = req.params.id;
-    if (!ObjectId.isValid(id)) return res.json({ success: false });
-
-    const listing = await db.collection("listings").findOne({ _id: new ObjectId(id) });
-    res.json({ success: !!listing, data: listing });
+  try {
+    const { id } = req.params;
+    const query = ObjectId.isValid(id) ? { $or: [{ _id: new ObjectId(id) }, { _id: id }] } : { _id: id };
+    const doc = await db.collection("listings").findOne(query);
+    if (!doc) return res.json({ success: false });
+    res.json({ success: true, data: doc });
+  } catch { res.json({ success: false }); }
 });
 
-// USER GARAGE
+// GARAGE
 app.get("/api/garage/listings", async (req, res) => {
-    const userId = getUserId(req);
-    if (!userId) return res.json({ success: true, data: [] });
-
-    const data = await db.collection("listings")
-        .find({ sellerId: new ObjectId(userId) })
-        .sort({ createdAt: -1 })
-        .toArray();
-
-    res.json({ success: true, data });
+    try {
+        const userId = getUserId(req);
+        if (!userId) return res.json({ success: true, data: [] });
+        const userListings = await db.collection("listings").find({ 
+            sellerId: new ObjectId(userId) 
+        }).sort({ createdAt: -1 }).toArray();
+        res.json({ success: true, data: userListings });
+    } catch (e) { res.json({ success: false }); }
 });
 
 // DELETE
 app.delete("/api/listings/:id", async (req, res) => {
-    await db.collection("listings").deleteOne({ _id: new ObjectId(req.params.id) });
-    res.json({ success: true });
+    try {
+        await db.collection("listings").deleteOne({ _id: new ObjectId(req.params.id) });
+        res.json({ success: true });
+    } catch { res.json({ success: false }); }
 });
 
 // UPDATE
-app.put("/api/listings/:id", async (req, res) => {
-    const { _id, sellerId, ...updates } = req.body;
-    await db.collection("listings").updateOne(
-        { _id: new ObjectId(req.params.id) },
-        { $set: updates }
-    );
-    res.json({ success: true });
+app.put("/api/listings/:id", express.json(), async (req, res) => {
+    try {
+        const updates = req.body;
+        delete updates._id; 
+        delete updates.sellerId;
+        await db.collection("listings").updateOne({ _id: new ObjectId(req.params.id) }, { $set: updates });
+        res.json({ success: true });
+    } catch { res.json({ success: false }); }
 });
 
-// -------------------- LIKES --------------------
-app.post("/api/users/:userId/likes", async (req, res) => {
-    const userId = new ObjectId(req.params.userId);
-    const { listingId } = req.body;
-
-    const update = await db.collection("users").findOneAndUpdate(
-        { _id: userId },
-        [{ $set: {
-            savedListings: {
-                $cond: [
-                    { $in: [listingId, "$savedListings"] },
-                    { $setDifference: ["$savedListings", [listingId]] },
-                    { $concatArrays: ["$savedListings", [listingId]] }
-                ]
-            }
-        }}],
-        { returnDocument: "after" }
-    );
-
-    const isLiked = update.savedListings?.includes(listingId);
-    res.json({ success: true, isLiked });
+// LIKES
+app.post("/api/users/:userId/likes", express.json(), async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { listingId } = req.body;
+        const user = await db.collection("users").findOne({ _id: new ObjectId(userId) });
+        const isLiked = user?.savedListings?.includes(listingId);
+        if (isLiked) await db.collection("users").updateOne({ _id: new ObjectId(userId) }, { $pull: { savedListings: listingId } });
+        else await db.collection("users").updateOne({ _id: new ObjectId(userId) }, { $addToSet: { savedListings: listingId } });
+        res.json({ success: true, isLiked: !isLiked });
+    } catch { res.json({ success: false }); }
 });
 
+// GET LIKES
 app.get("/api/users/:userId/likes", async (req, res) => {
-    const user = await db.collection("users").findOne({ _id: new ObjectId(req.params.userId) });
-
-    const ids = (user?.savedListings || []).map(id => new ObjectId(id));
-
-    const data = await db.collection("listings").find({ _id: { $in: ids } }).toArray();
-    res.json({ success: true, data });
+    try {
+        const user = await db.collection("users").findOne({ _id: new ObjectId(req.params.userId) });
+        const ids = (user?.savedListings || []).map(id => new ObjectId(id));
+        const data = await db.collection("listings").find({ _id: { $in: ids } }).toArray();
+        res.json({ success: true, data });
+    } catch { res.json({ success: true, data: [] }); }
 });
 
-// -------------------- CONTACT --------------------
+app.get("/api/users/:userId", async (req, res) => {
+    const user = await db.collection("users").findOne({ _id: new ObjectId(req.params.userId) });
+    res.json({ success: true, savedListings: user?.savedListings || [] });
+});
+
+// KONTAKT
 app.get("/api/listings/:id/contact", async (req, res) => {
-    const listing = await db.collection("listings").findOne({ _id: new ObjectId(req.params.id) });
+    try {
+        const listing = await db.collection("listings").findOne({ _id: new ObjectId(req.params.id) });
+        const seller = await db.collection("users").findOne({ _id: listing.sellerId });
+        res.json({ success: true, phone: seller?.phone });
+    } catch { res.json({ success: false }); }
+});
 
-    const seller = await db.collection("users").findOne({ _id: listing.sellerId });
+// FIRME
+app.get("/api/cars/makes", async (req, res) => {
+    const r = await fetch("https://carapi.app/api/makes/v2");
+    const j = await r.json();
+    res.json({ data: j.data });
+});
+app.get("/api/cars/models/:make", async (req, res) => {
+    const r = await fetch(`https://carapi.app/api/models/v2?make=${req.params.make}`);
+    const j = await r.json();
+    res.json({ data: j.data });
+});
 
-    res.json({ success: true, phone: seller?.phone });
+app.get("/api/users/:userId/listings", async (req, res) => {
+    try {
+        const userId = req.params.userId;
+                console.log("🔍 SellerID from Token:", userId);
+        const sellerObjectId = new ObjectId(userId); 
+        const userListings = await db.collection("listings").find({ 
+            sellerId: sellerObjectId
+        }).sort({ createdAt: -1 }).toArray();
+        res.json({ success: true, data: userListings });
+    } catch (e) {
+        console.error("❌ Garage Fetch Error:", e);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
 });
